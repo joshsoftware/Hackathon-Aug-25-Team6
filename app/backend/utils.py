@@ -5,12 +5,7 @@ from datetime import datetime
 from fastapi import HTTPException, UploadFile, status
 from passlib.context import CryptContext
 
-from app.backend import config
-
-
-def get_password_hash(password: str):
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    return pwd_context.hash(password)
+from app.backend import config, database
 
 
 def save_upload_file(upload_file: UploadFile, email: str) -> str:
@@ -35,3 +30,12 @@ def save_upload_file(upload_file: UploadFile, email: str) -> str:
         shutil.copyfileobj(upload_file.file, buffer)
 
     return file_path
+
+
+def create_tables():
+    print("Creating database tables...")
+    try:
+        database.Base.metadata.create_all(bind=database.engine)
+        print("Tables created successfully!")
+    except Exception as e:
+        print(f"Error creating tables: {e}")

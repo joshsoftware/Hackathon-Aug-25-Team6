@@ -10,6 +10,11 @@ class UserRole(str, Enum):
     HR = "hr"
 
 
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
 class UserSignup(BaseModel):
     email: EmailStr
     name: str
@@ -28,7 +33,9 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-class JobCreate(BaseModel):
+class JobCreate(
+    BaseModel
+):  # add job title, company, job type, application deadline, status
     job_id: int
     location: str
     experience: str
@@ -124,3 +131,9 @@ class QuestionAnswerResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
