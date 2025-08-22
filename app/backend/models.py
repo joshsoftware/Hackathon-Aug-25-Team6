@@ -49,3 +49,11 @@ class JobApplication(Base):
 
     # Relationship to Job
     job = relationship("Job", back_populates="applications")
+
+
+class Question(Base):
+    __tablename__ = "questions"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    text = Column(String, nullable=False)
+    tags = Column(String, nullable=True)

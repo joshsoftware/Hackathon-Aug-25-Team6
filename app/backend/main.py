@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.backend.api.questions import router as questions_router
 from app.backend.utils import get_password_hash, save_upload_file
 
 from . import database, models, schema
@@ -9,6 +10,7 @@ from . import database, models, schema
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI()
+app.include_router(questions_router)
 
 
 @app.post(

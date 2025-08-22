@@ -1,3 +1,4 @@
+import string
 from enum import Enum
 from typing import Optional
 
@@ -83,6 +84,21 @@ class JobApplicationResponse(BaseModel):
     current_city: str
     gender: Gender
     resume_path: str
+    message: str
+
+    class Config:
+        from_attributes = True
+
+
+class QuestionCreate(BaseModel):
+    text: str
+    tags: Optional[str] = None
+
+
+class QuestionResponse(BaseModel):
+    id: int
+    text: str
+    tags: Optional[str] = None
     message: str
 
     class Config:
