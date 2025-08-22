@@ -35,7 +35,6 @@ class UserResponse(BaseModel):
 class JobCreate(
     BaseModel
 ):  # add job title, company, job type, application deadline, status
-    job_id: int
     location: str
     experience: str
     job_overview: str
@@ -54,7 +53,6 @@ class JobResponse(BaseModel):
     required_skills: str
     qualifications: str
     good_to_have_skills: Optional[str] = None
-    message: str
 
     class Config:
         from_attributes = True
