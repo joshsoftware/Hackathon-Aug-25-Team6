@@ -96,7 +96,43 @@ class JobApplicationResponse(BaseModel):
         from_attributes = True
 
 
+class QuestionCreate(BaseModel):
+    text: str
+    tags: Optional[str] = None
+
+
+class QuestionResponse(BaseModel):
+    id: int
+    text: str
+    tags: Optional[str] = None
+    message: str
+
+    class Config:
+        from_attributes = True
+
+
+class QuestionAnswerCreate(BaseModel):
+    question_id: int
+    candidate_id: int
+    resume_path: str
+    jd_path: str
+    answer: str
+
+
+class QuestionAnswerResponse(BaseModel):
+    id: int
+    question_id: int
+    candidate_id: int
+    resume_path: str
+    jd_path: str
+    answer: str
+    message: str
+
+    class Config:
+        from_attributes = True
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
-    user: UserResponse 
+    user: UserResponse

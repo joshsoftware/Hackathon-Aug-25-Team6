@@ -3,6 +3,8 @@ from datetime import timedelta
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.backend.api.questions import router as questions_router
+from app.backend.utils import get_password_hash, save_upload_file
 from app.backend.utils import create_tables, save_upload_file
 
 from app.backend import database, models, schema, security
@@ -12,6 +14,7 @@ from app.backend.utils import save_upload_file
 create_tables()
 
 app = FastAPI()
+app.include_router(questions_router)
 
 
 @app.post("/login", response_model=schema.TokenResponse)
