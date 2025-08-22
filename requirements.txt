@@ -8,4 +8,12 @@ pydantic[email]==2.11.7
 python-multipart==0.0.20
 python-jose[cryptography]==3.5.0
 python-dotenv==1.1.1
+langchain
+langchain-core
+langchain-community==0.2.19
+fuzzywuzzy
+fuzzywuzzy[speedup]
+docx2txt
+PyMuPDF
+python-dotenv
 requests==2.32.5
