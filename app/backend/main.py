@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
@@ -7,14 +8,23 @@ from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
 from app.backend.api.questions_score import question_score_router
 from app.backend.utils import create_tables, save_upload_file
+from fastapi.middleware.cors import CORSMiddleware
 
 # create tables
 create_tables()
 
 app = FastAPI()
+
+# CORS settings for frontend at http://localhost:3000
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(question_router)
 app.include_router(question_score_router)
-
 
 @app.post("/login", response_model=schema.TokenResponse)
 async def login(
