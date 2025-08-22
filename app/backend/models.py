@@ -70,3 +70,27 @@ class QuestionAnswer(Base):
     answer = Column(Text, nullable=False)
 
     question = relationship("Question", back_populates="answers")
+
+
+class QuestionScore(Base):
+    __tablename__ = "question_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    application_id = Column(Integer, ForeignKey("job_applications.id"), nullable=False)
+    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
+    technical_correctness = Column(Integer, nullable=False)
+    specificity_depth = Column(Integer, nullable=False)
+    reasoning_quality = Column(Integer, nullable=False)
+    real_world_signals = Column(Integer, nullable=False)
+    communication = Column(Integer, nullable=False)
+    final_score = Column(Integer, nullable=False)
+    verdict = Column(String, nullable=False)
+    improvement_tips = Column(Text, nullable=True)
+
+    # Relationship to JobApplication
+    application = relationship("JobApplication", back_populates="question_scores")
+    # Relationship to Candidate
+    candidate = relationship("User", back_populates="question_scores")
+    # Relationship to Question
+    question = relationship("Question", back_populates="question_scores")
