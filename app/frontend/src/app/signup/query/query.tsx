@@ -2,11 +2,12 @@ import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { useToast } from "@/app/(components)/ui/use-toast";
 import { useRouter } from "next/navigation";
+import { axiosInstance } from "@/app/(auth)/axiosInstance";
 
 const AUTH_API = {
-    SIGNUP: "/api/auth/signup",
-    LOGIN: "/api/auth/login",
-    LOGOUT: "/api/auth/logout"
+    SIGNUP: "/signup",
+    LOGIN: "/login",
+    LOGOUT: "/logout"
 };
 
 interface ISignUpPayload {
@@ -22,6 +23,7 @@ interface ILoginPayload {
 }
 
 interface IAuthResponse {
+    message: string;
     access_token: string;
     user: {
         id: string;
@@ -38,26 +40,19 @@ export const useSignUp = () => {
     const { mutate, isError, isPending, isSuccess } = useMutation({
         mutationKey: ['signup'],
         
-        mutationFn: (payload: ISignUpPayload) => 
-            axios.post<IAuthResponse>(AUTH_API.SIGNUP, payload, { withCredentials: true }),
+        mutationFn: async (payload: ISignUpPayload) => {
+            const response = await axiosInstance.post<IAuthResponse>(AUTH_API.SIGNUP, payload);
+            return response.data;
+        },
 
         onSuccess: (response) => {
-            const { access_token, user } = response.data;
-            
-            localStorage.setItem('token', access_token);
-            
             toast.toast({
                 title: "Account created!",
-                description: "Your account has been created successfully!",
+                description: response.message || "Your account has been created successfully, Please Login",
                 variant: "default",
             });
 
-            // Redirect based on role
-            if (user.role === 'recruiter') {
-                router.push('/recruiter/dashboard');
-            } else {
-                router.push('/candidate/dashboard');
-            }
+            router.push('/')
         },
         onError: (error: AxiosError) => {
             const errorMessage = (error.response?.data as { error_msg: string })?.error_msg || 'Sign up failed';

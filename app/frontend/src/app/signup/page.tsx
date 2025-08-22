@@ -36,14 +36,6 @@ export default function SignupPage() {
     
     // Mock authentication - redirect based on user type
     console.log(`Signing up as ${userType} with email: ${email}, name: ${name}, password: ${password} - this is where you would handle the actual signup logic.`);
-
-    if (userType === "recruiter") {
-      window.location.href = "/recruiter/dashboard"
-    } else {
-      window.location.href = "/candidate/dashboard"
-    }
-
-    setIsLoading(false)
   }
 
   return (
@@ -109,20 +101,26 @@ export default function SignupPage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : `Sign in as ${userType === "candidate" ? "Candidate" : "Recruiter"}`}
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isSignUpPending}
+                >
+                  {isSignUpPending 
+                    ? "Creating account..." 
+                    : `Sign up as ${userType === "candidate" ? "Candidate" : "Recruiter"}`}
                 </Button>
               </form>
 
                <TabsContent value="candidate" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>Already Have Account? <Link href="/" className="text-blue-600 hover:bg-blue-700 hover:text-white"> Sign In.</Link></p>
+                  <p>Already Have Account? <Link href="/" className="text-blue-400 hover:bg-blue-700 hover:text-white"> Sign In.</Link></p>
                 </div>
               </TabsContent>
 
               <TabsContent value="recruiter" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>Already Have Account ?  <Link href="/" className="text-blue-600 hover:bg-blue-700 hover:text-white">Sign In.</Link></p>
+                  <p>Already Have Account ?  <Link href="/" className="text-blue-400 hover:bg-blue-700 hover:text-white">Sign In.</Link></p>
                 </div>
               </TabsContent>
             </Tabs>
