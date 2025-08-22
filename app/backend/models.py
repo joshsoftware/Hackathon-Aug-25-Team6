@@ -22,7 +22,7 @@ class User(Base):
 class Job(Base):
     __tablename__ = "jobs"
 
-    job_id = Column(Integer, primary_key=True, unique=True, index=True, nullable=False)
+    job_id = Column(Integer, primary_key=True, index=True, nullable=False, autoincrement=True)
     location = Column(String, nullable=False)
     experience = Column(String, nullable=False)
     job_overview = Column(Text, nullable=False)

@@ -2,3 +2,4 @@
 __pycache__/
 app/frontend/node_modules/
 /app/frontend/.next
+.vscode/

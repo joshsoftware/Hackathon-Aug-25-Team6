@@ -79,26 +79,26 @@ def signup(user: schema.UserSignup, db: Session = Depends(database.get_db)):
     return {"message": "User created successfully"}
 
 
-@app.post(
-    "/jobs", response_model=schema.JobResponse, status_code=status.HTTP_201_CREATED
-)
+@app.post("/jobs", status_code=status.HTTP_201_CREATED)
 def create_job(
     job: schema.JobCreate,
     current_user: models.User = Depends(security.hr_required),
     db: Session = Depends(database.get_db),
 ):
-    db_job = db.query(models.Job).filter(models.Job.job_id == job.job_id).first()
-    if db_job:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Job ID already exists"
-        )
-
     new_job = models.Job(**job.model_dump())
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
 
-    return schema.JobResponse(**job.model_dump(), message="Job created successfully")
+    return {"message": "Job created successfully"}
+
+@app.get("/jobs", response_model=list[schema.JobResponse])
+def get_jobs(
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+    jobs = db.query(models.Job).all()
+    return jobs
 
 
 @app.post(
