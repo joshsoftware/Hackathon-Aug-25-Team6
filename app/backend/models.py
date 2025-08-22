@@ -57,3 +57,16 @@ class Question(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     text = Column(String, nullable=False)
     tags = Column(String, nullable=True)
+
+
+class QuestionAnswer(Base):
+    __tablename__ = "question_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
+    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
+    resume_path = Column(String, nullable=False)
+    jd_path = Column(String, nullable=False)
+    answer = Column(Text, nullable=False)
+
+    question = relationship("Question", back_populates="answers")

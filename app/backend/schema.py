@@ -103,3 +103,24 @@ class QuestionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class QuestionAnswerCreate(BaseModel):
+    question_id: int
+    candidate_id: int
+    resume_path: str
+    jd_path: str
+    answer: str
+
+
+class QuestionAnswerResponse(BaseModel):
+    id: int
+    question_id: int
+    candidate_id: int
+    resume_path: str
+    jd_path: str
+    answer: str
+    message: str
+
+    class Config:
+        from_attributes = True
