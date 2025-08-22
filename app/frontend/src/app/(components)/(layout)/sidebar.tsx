@@ -60,16 +60,16 @@ const candidateNavItems = [
     href: "/candidate/applications",
     icon: FileText,
   },
-  {
-    title: "Upload Resume",
-    href: "/candidate/resume",
-    icon: Upload,
-  },
-  {
-    title: "Messages",
-    href: "/candidate/messages",
-    icon: MessageSquare,
-  },
+  // {
+  //   title: "Upload Resume",
+  //   href: "/candidate/resume",
+  //   icon: Upload,
+  // },
+  // {
+  //   title: "Messages",
+  //   href: "/candidate/messages",
+  //   icon: MessageSquare,
+  // },
 ];
 
 export function Sidebar() {
@@ -83,12 +83,11 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border">
-      <div className="flex h-16 items-center px-6 border-b border-sidebar-border">
+      {/* <div className="flex h-16 items-center px-6 border-b border-sidebar-border">
         <h2 className="text-lg font-semibold text-sidebar-foreground">
           {user.role === "recruiter" ? "Recruiter Panel" : "Candidate Panel"}
         </h2>
-      </div>
-
+      </div> */}
       <nav className="flex-1 space-y-1 p-4">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -101,8 +100,8 @@ export function Sidebar() {
                 className={cn(
                   "w-full justify-start gap-3",
                   isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-sidebar-primary cursor-pointer text-sidebar-primary-foreground"
+                    : "cursor-pointer text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <Icon className="h-4 w-4" />
