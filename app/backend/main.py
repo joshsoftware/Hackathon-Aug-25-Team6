@@ -1,12 +1,13 @@
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.backend.utils import get_password_hash, save_upload_file
+from app.backend.utils import (create_tables, get_password_hash,
+                               save_upload_file)
 
 from . import database, models, schema
 
 # create tables
-models.Base.metadata.create_all(bind=database.engine)
+create_tables()
 
 app = FastAPI()
 
