@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
@@ -7,14 +8,23 @@ from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
 from app.backend.api.questions_score import question_score_router
 from app.backend.utils import create_tables, save_upload_file
+from fastapi.middleware.cors import CORSMiddleware
 
 # create tables
 create_tables()
 
 app = FastAPI()
+
+# CORS settings for frontend at http://localhost:3000
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(question_router)
 app.include_router(question_score_router)
-
 
 @app.post("/login", response_model=schema.TokenResponse)
 async def login(
@@ -69,26 +79,26 @@ def signup(user: schema.UserSignup, db: Session = Depends(database.get_db)):
     return {"message": "User created successfully"}
 
 
-@app.post(
-    "/jobs", response_model=schema.JobResponse, status_code=status.HTTP_201_CREATED
-)
+@app.post("/jobs", status_code=status.HTTP_201_CREATED)
 def create_job(
     job: schema.JobCreate,
     current_user: models.User = Depends(security.hr_required),
     db: Session = Depends(database.get_db),
 ):
-    db_job = db.query(models.Job).filter(models.Job.job_id == job.job_id).first()
-    if db_job:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Job ID already exists"
-        )
-
     new_job = models.Job(**job.model_dump())
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
 
-    return schema.JobResponse(**job.model_dump(), message="Job created successfully")
+    return {"message": "Job created successfully"}
+
+@app.get("/jobs", response_model=list[schema.JobResponse])
+def get_jobs(
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+    jobs = db.query(models.Job).all()
+    return jobs
 
 
 @app.post(

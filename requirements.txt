@@ -12,8 +12,8 @@ langchain
 langchain-core
 langchain-community==0.2.19
 fuzzywuzzy
-requests
 fuzzywuzzy[speedup]
 docx2txt
 PyMuPDF
 python-dotenv
+requests==2.32.5
