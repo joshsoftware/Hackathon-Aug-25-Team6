@@ -10,6 +10,8 @@ import { Input } from "@/app/(components)/ui/input"
 import { Label } from "@/app/(components)/ui/label"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/app/(components)/ui/tabs"
 import Link from "next/link"
+import { useSignUp } from "./query/query"
+
 
 export default function SignupPage() {
   const [email, setEmail] = useState("")
@@ -18,16 +20,23 @@ export default function SignupPage() {
   const [userType, setUserType] = useState<"candidate" | "recruiter">("candidate")
   const [isLoading, setIsLoading] = useState(false)
 
+  const { signUpMutation, isSignUpPending, isSignUpError } = useSignUp()
+  
+  
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    // await new Promise((resolve) => setTimeout(resolve, 1000))
-
+    signUpMutation({
+      email,
+      password,
+      name,
+      role: userType
+    })
+    
     // Mock authentication - redirect based on user type
     console.log(`Signing up as ${userType} with email: ${email}, name: ${name}, password: ${password} - this is where you would handle the actual signup logic.`);
-    debugger;
+
     if (userType === "recruiter") {
       window.location.href = "/recruiter/dashboard"
     } else {
