@@ -3,13 +3,11 @@ from datetime import timedelta
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.backend.api.questions import question_router
-from app.backend.api.questions_score import question_score_router
-from app.backend.utils import get_password_hash, save_upload_file
-from app.backend.utils import create_tables, save_upload_file
-
 from app.backend import database, models, schema, security
-from app.backend.utils import save_upload_file
+from app.backend.api.questions import question_router
+from app.backend.api.questions import router as questions_router
+from app.backend.api.questions_score import question_score_router
+from app.backend.utils import create_tables, get_password_hash, save_upload_file
 
 # create tables
 create_tables()
@@ -45,14 +43,12 @@ async def login(
             "email": user.email,
             "name": user.name,
             "role": user.role,
-            "message": "Login successful"
-        }
+            "message": "Login successful",
+        },
     }
 
 
-@app.post(
-    "/signup", status_code=status.HTTP_201_CREATED
-)
+@app.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup(user: schema.UserSignup, db: Session = Depends(database.get_db)):
     # check if user already exists
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -71,9 +67,7 @@ def signup(user: schema.UserSignup, db: Session = Depends(database.get_db)):
     db.commit()
     db.refresh(new_user)
 
-    return {
-        "message": "User created successfully"
-    }
+    return {"message": "User created successfully"}
 
 
 @app.post(

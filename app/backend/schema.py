@@ -1,4 +1,3 @@
-import string
 from enum import Enum
 from typing import Optional
 
@@ -97,7 +96,6 @@ class JobApplicationResponse(BaseModel):
         from_attributes = True
 
 
-<<<<<<< HEAD
 class QuestionCreate(BaseModel):
     text: str
     tags: Optional[str] = None
@@ -161,9 +159,9 @@ class QuestionScoreResponse(BaseModel):
     final_score: int
     verdict: str
     improvement_tips: Optional[str] = None
-=======
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
-    user: UserResponse 
->>>>>>> a2cf567593eefea3841af14f2f9d657dd9cbb9ec
+    user: UserResponse
