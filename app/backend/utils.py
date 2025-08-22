@@ -8,11 +8,6 @@ from passlib.context import CryptContext
 from app.backend import config, database
 
 
-def get_password_hash(password: str):
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    return pwd_context.hash(password)
-
-
 def save_upload_file(upload_file: UploadFile, email: str) -> str:
     # Create upload directory if it doesn't exist
     os.makedirs(config.UPLOAD_DIR, exist_ok=True)
