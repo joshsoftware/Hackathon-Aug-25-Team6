@@ -5,9 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
-from app.backend.api.questions import router as questions_router
 from app.backend.api.questions_score import question_score_router
-from app.backend.utils import create_tables, get_password_hash, save_upload_file
+from app.backend.utils import create_tables, save_upload_file
 
 # create tables
 create_tables()

@@ -15,6 +15,8 @@ class User(Base):
     name = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False)
+    question_answers = relationship("QuestionAnswer", back_populates="candidate")
+    question_scores = relationship("QuestionScore", back_populates="candidate")
 
 
 class Job(Base):
@@ -49,6 +51,8 @@ class JobApplication(Base):
 
     # Relationship to Job
     job = relationship("Job", back_populates="applications")
+    # Relationship to QuestionScore
+    question_scores = relationship("QuestionScore", back_populates="application")
 
 
 class Question(Base):
@@ -58,18 +62,22 @@ class Question(Base):
     text = Column(String, nullable=False)
     tags = Column(String, nullable=True)
 
+    question_answers = relationship("QuestionAnswer", back_populates="question")
+    question_scores = relationship("QuestionScore", back_populates="question")
+
 
 class QuestionAnswer(Base):
     __tablename__ = "question_answers"
 
     id = Column(Integer, primary_key=True, index=True)
     question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
-    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
+    candidate_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     resume_path = Column(String, nullable=False)
     jd_path = Column(String, nullable=False)
     answer = Column(Text, nullable=False)
 
-    question = relationship("Question", back_populates="answers")
+    question = relationship("Question", back_populates="question_answers")
+    candidate = relationship("User", back_populates="question_answers")
 
 
 class QuestionScore(Base):
@@ -77,7 +85,8 @@ class QuestionScore(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     application_id = Column(Integer, ForeignKey("job_applications.id"), nullable=False)
-    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
+    candidate_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    candidate = relationship("User", back_populates="question_scores")
     question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
     technical_correctness = Column(Integer, nullable=False)
     specificity_depth = Column(Integer, nullable=False)
