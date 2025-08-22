@@ -179,7 +179,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
@@ -194,7 +194,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   Share Job
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Job Details */}
             <Card>

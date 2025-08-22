@@ -11,20 +11,23 @@ import { Label } from "@/app/(components)/ui/label"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/app/(components)/ui/tabs"
 import Link from "next/link"
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [userType, setUserType] = useState<"candidate" | "recruiter">("candidate")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Mock authentication - redirect based on user type
+    console.log(`Signing up as ${userType} with email: ${email}, name: ${name}, password: ${password} - this is where you would handle the actual signup logic.`);
+    debugger;
     if (userType === "recruiter") {
       window.location.href = "/recruiter/dashboard"
     } else {
@@ -44,8 +47,8 @@ export default function LoginPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Access your account to continue with the screening process</CardDescription>
+            <CardTitle>Sign Up</CardTitle>
+            <CardDescription>Create account to continue with the screening process</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={userType} onValueChange={(value: any) => setUserType(value as "candidate" | "recruiter")}>
@@ -60,7 +63,7 @@ export default function LoginPage() {
                 </TabsTrigger>
               </TabsList>
 
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -69,6 +72,18 @@ export default function LoginPage() {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     required
                   />
                 </div>
@@ -90,15 +105,15 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <TabsContent value="candidate" className="mt-6">
+               <TabsContent value="candidate" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>New candidate? <Link href="/signup" className="text-blue-600 hover:bg-blue-700 hover:text-white"> Create account.</Link></p>
+                  <p>Already Have Account? <Link href="/" className="text-blue-600 hover:bg-blue-700 hover:text-white"> Sign In.</Link></p>
                 </div>
               </TabsContent>
 
               <TabsContent value="recruiter" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>New Recruiter ?  <Link href="/signup" className="text-blue-600 hover:bg-blue-700 hover:text-white">Create Account.</Link></p>
+                  <p>Already Have Account ?  <Link href="/" className="text-blue-600 hover:bg-blue-700 hover:text-white">Sign In.</Link></p>
                 </div>
               </TabsContent>
             </Tabs>
