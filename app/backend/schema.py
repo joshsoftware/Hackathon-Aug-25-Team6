@@ -124,3 +124,32 @@ class QuestionAnswerResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class QuestionScoreCreate(BaseModel):
+    application_id: int
+    candidate_id: int
+    question_id: int
+    technical_correctness: int
+    specificity_depth: int
+    reasoning_quality: int
+    real_world_signals: int
+    communication: int
+    final_score: int
+    verdict: str
+    improvement_tips: Optional[str] = None
+
+
+class QuestionScoreResponse(BaseModel):
+    id: int
+    application_id: int
+    candidate_id: int
+    question_id: int
+    technical_correctness: int
+    specificity_depth: int
+    reasoning_quality: int
+    real_world_signals: int
+    communication: int
+    final_score: int
+    verdict: str
+    improvement_tips: Optional[str] = None
