@@ -21,7 +21,7 @@ async def create_question(
     return schema.QuestionResponse(
         id=db_question.id,
         text=db_question.text,
-        tags=question.tags,
+        tags=db_question.tags,
         message="Question created successfully",
     )
 
