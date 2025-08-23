@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -42,20 +43,25 @@ class JobCreate(
     job_overview: str
     key_responsibilities: str
     must_have_skills: str
-    qualifications: str
     good_to_have_skills: Optional[str] = None
+    job_type: str
 
 
 class JobResponse(BaseModel):
     job_id: int
+    title: str
+    company: str
     location: str
     experience: str
     job_overview: str
     key_responsibilities: str
     must_have_skills: str
-    qualifications: str
     good_to_have_skills: Optional[str] = None
     recruiter_id: int
+    job_type: str
+    recruiter_name: str
+    applications_count: int
+    posted_date: datetime
 
     class Config:
         from_attributes = True
