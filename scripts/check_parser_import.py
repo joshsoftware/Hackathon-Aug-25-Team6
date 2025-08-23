@@ -8,6 +8,7 @@ sys.path.insert(0, str(project_root))
 
 try:
     import app.backend.service.parser as parser
+
     print("OK: parser module imported successfully")
     have_pymupdf = getattr(parser, "_HAVE_PYMUPDF", None)
     have_pypdf = getattr(parser, "_HAVE_PYPDF", None)

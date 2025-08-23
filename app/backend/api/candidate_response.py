@@ -7,7 +7,7 @@ question_answer_router = APIRouter()
 
 
 @question_answer_router.post(
-    "/question_answer/",
+    "/question_response/",
     response_model=schema.QuestionAnswerResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -24,7 +24,7 @@ def create_answer(
 
 
 @question_answer_router.get(
-    "/question_answer/{answer_id}",
+    "/question_response/{answer_id}",
     response_model=schema.QuestionAnswerResponse,
     status_code=status.HTTP_200_OK,
 )
@@ -40,7 +40,7 @@ def get_answer(answer_id: int, db: Session = Depends(database.get_db)):
 
 
 @question_answer_router.put(
-    "/question_answer/{answer_id}",
+    "/question_response/{answer_id}",
     response_model=schema.QuestionAnswerResponse,
     status_code=status.HTTP_200_OK,
 )
@@ -66,7 +66,7 @@ def update_answer(
 
 
 @question_answer_router.delete(
-    "/question_answer/{answer_id}", response_model=schema.QuestionAnswerResponse
+    "/question_response/{answer_id}", response_model=schema.QuestionAnswerResponse
 )
 def delete_answer(answer_id: int, db: Session = Depends(database.get_db)):
     db_answer = (
