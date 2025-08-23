@@ -29,10 +29,7 @@ class Job(Base):
     job_id = Column(
         Integer, primary_key=True, index=True, nullable=False, autoincrement=True
     )
-<<<<<<< HEAD
 
-=======
->>>>>>> f44de8b9738798965b8b9ff63c0bf0efd0f08a91
     title = Column(String, nullable=False)
     company = Column(String, nullable=False)
     location = Column(String, nullable=False)

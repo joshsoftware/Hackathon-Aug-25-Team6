@@ -69,11 +69,6 @@ class JobResponse(BaseModel):
     experience: str
     job_overview: str
     key_responsibilities: str
-<<<<<<< HEAD
-    required_skills: str
-    qualifications: str
-    good_to_have_skills: Optional[str] = None
-=======
     must_have_skills: str
     good_to_have_skills: Optional[str] = None
     recruiter_id: int
@@ -81,7 +76,6 @@ class JobResponse(BaseModel):
     recruiter_name: str
     applications_count: int
     posted_date: datetime
->>>>>>> f44de8b9738798965b8b9ff63c0bf0efd0f08a91
 
     class Config:
         from_attributes = True
