@@ -15,7 +15,7 @@ import { useLogin } from "./signup/query/query"
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [userType, setUserType] = useState<"candidate" | "recruiter">("candidate")
+  const [userType, setUserType] = useState<"candidate" | "hr">("candidate")
 
   const { loginMutation } = useLogin()
 
@@ -42,13 +42,13 @@ export default function LoginPage() {
             <CardDescription>Access your account to continue with the screening process</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={userType} onValueChange={(value: any) => setUserType(value as "candidate" | "recruiter")}>
+            <Tabs value={userType} onValueChange={(value: any) => setUserType(value as "candidate" | "hr")}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="candidate" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   Candidate
                 </TabsTrigger>
-                <TabsTrigger value="recruiter" className="flex items-center gap-2">
+                <TabsTrigger value="hr" className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   Recruiter
                 </TabsTrigger>
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="recruiter" className="mt-6">
+              <TabsContent value="hr" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
                   <p>New Recruiter ?  <Link href="/signup" className="text-blue-600 hover:bg-blue-700 hover:text-white">Create Account.</Link></p>
                 </div>
