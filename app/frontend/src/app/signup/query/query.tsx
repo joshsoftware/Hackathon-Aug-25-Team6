@@ -1,8 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-import { useToast } from "@/app/(components)/ui/use-toast";
+// import { useToast } from "@/app/(components)/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/app/(auth)/axiosInstance";
+import { toast } from "react-toastify";
 
 const AUTH_API = {
     SIGNUP: "/signup",
@@ -14,7 +15,7 @@ interface ISignUpPayload {
     email: string;
     name: string;
     password: string;
-    role: "candidate" | "recruiter";
+    role: "candidate" | "hr";
 }
 
 interface ILoginPayload {
@@ -33,8 +34,21 @@ interface IAuthResponse {
     };
 }
 
+interface ILoginResponse {
+    access_token: string;
+    token_type: string;
+    user: {
+        id: number;
+        email: string;
+        name: string;
+        role: "candidate" | "recruiter";
+        message: string;
+    };
+}
+
+
 export const useSignUp = () => {
-    const toast = useToast();
+    // const toast = useToast();
     const router = useRouter();
 
     const { mutate, isError, isPending, isSuccess } = useMutation({
@@ -46,21 +60,14 @@ export const useSignUp = () => {
         },
 
         onSuccess: (response) => {
-            toast.toast({
-                title: "Account created!",
-                description: response.message || "Your account has been created successfully, Please Login",
-                variant: "default",
-            });
+            toast.success('Sign up successful!')
 
             router.push('/')
         },
+        
         onError: (error: AxiosError) => {
             const errorMessage = (error.response?.data as { error_msg: string })?.error_msg || 'Sign up failed';
-            toast.toast({
-                title: "Error!",
-                description: errorMessage,
-                variant: "destructive",
-            });
+            toast.error(errorMessage);
         }
     });
 
@@ -73,24 +80,22 @@ export const useSignUp = () => {
 };
 
 export const useLogin = () => {
-    const toast = useToast();
     const router = useRouter();
 
     const { mutate, isError, isPending, isSuccess } = useMutation({
         mutationKey: ['login'],
         mutationFn: (payload: ILoginPayload) => 
-            axios.post<IAuthResponse>(AUTH_API.LOGIN, payload, { withCredentials: true }),
+            axiosInstance.post<ILoginResponse>(AUTH_API.LOGIN, payload, { withCredentials: true }),
         onSuccess: (response) => {
-            const { access_token, user } = response.data;
+            const { access_token, user, token_type } = response.data;
             
+            const capitalizedTokenType = token_type.charAt(0).toUpperCase() + token_type.slice(1);
+
             // Store token
-            localStorage.setItem('token', access_token);
+            localStorage.setItem('token', `${capitalizedTokenType} ${access_token}`);
+            localStorage.setItem('userDetails', JSON.stringify(user))
             
-            toast.toast({
-                title: "Welcome back!",
-                description: "You've successfully logged in.",
-                variant: "default",
-            });
+            toast.success("You've successfully logged in.");
 
             // Redirect based on role
             if (user.role === 'recruiter') {
@@ -101,11 +106,7 @@ export const useLogin = () => {
         },
         onError: (error: AxiosError) => {
             const errorMessage = (error.response?.data as { error_msg: string })?.error_msg || 'Login failed';
-            toast.toast({
-                title: "Error!",
-                description: errorMessage,
-                variant: "destructive",
-            });
+            toast.error(errorMessage);
         }
     });
 
@@ -114,42 +115,5 @@ export const useLogin = () => {
         isLoginError: isError,
         isLoginPending: isPending,
         isLoginSuccess: isSuccess
-    };
-};
-
-export const useLogout = () => {
-    const toast = useToast();
-    const router = useRouter();
-
-    const { mutate, isError, isPending, isSuccess } = useMutation({
-        mutationKey: ['logout'],
-        mutationFn: () => axios.post(AUTH_API.LOGOUT, {}, { withCredentials: true }),
-        onSuccess: () => {
-            localStorage.removeItem('token');
-            
-            toast.toast({
-                title: "Logged out",
-                description: "You've been successfully logged out.",
-                variant: "default",
-            });
-
-            // Redirect to login
-            router.push('/');
-        },
-        onError: (error: AxiosError) => {
-            const errorMessage = (error.response?.data as { error_msg: string })?.error_msg || 'Logout failed';
-            toast.toast({
-                title: "Error!",
-                description: errorMessage,
-                variant: "destructive",
-            });
-        }
-    });
-
-    return {
-        logoutMutation: mutate,
-        isLogoutError: isError,
-        isLogoutPending: isPending,
-        isLogoutSuccess: isSuccess
     };
 };

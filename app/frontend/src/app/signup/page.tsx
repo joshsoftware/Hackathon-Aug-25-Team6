@@ -17,7 +17,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
-  const [userType, setUserType] = useState<"candidate" | "recruiter">("candidate")
+  const [userType, setUserType] = useState<"candidate" | "hr">("candidate")
   const [isLoading, setIsLoading] = useState(false)
 
   const { signUpMutation, isSignUpPending, isSignUpError } = useSignUp()
@@ -52,13 +52,13 @@ export default function SignupPage() {
             <CardDescription>Create account to continue with the screening process</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={userType} onValueChange={(value: any) => setUserType(value as "candidate" | "recruiter")}>
+            <Tabs value={userType} onValueChange={(value: any) => setUserType(value as "candidate" | "hr")}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="candidate" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   Candidate
                 </TabsTrigger>
-                <TabsTrigger value="recruiter" className="flex items-center gap-2">
+                <TabsTrigger value="hr" className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   Recruiter
                 </TabsTrigger>
@@ -118,7 +118,7 @@ export default function SignupPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="recruiter" className="mt-6">
+              <TabsContent value="hr" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
                   <p>Already Have Account ?  <Link href="/" className="text-blue-400 hover:bg-blue-700 hover:text-white">Sign In.</Link></p>
                 </div>

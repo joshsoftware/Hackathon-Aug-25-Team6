@@ -14,13 +14,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/(components)/ui/dropdown-menu";
-import { getCurrentUser, logout } from "@/app/(lib)/auth";
+import { getCurrentUser } from "@/app/(lib)/auth";
 import { LogOut, Settings, User } from "lucide-react";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export function Header() {
-  const user = getCurrentUser();
+  const { user, authToken } = getCurrentUser();
+  const router = useRouter()
+  // const { logoutMutation } = useLogout(); // Use logout mutation
 
-  if (!user) return null;
+   const logoutApplication = () => {
+    router.push('/')
+    localStorage.clear();
+    toast.success("Logged out successfully");
+    
+   }
+  
+  // If no user or no token, don't render the header
+  if (!user || !authToken) return null;
 
   return (
     <header className="border-b border-border bg-card">
@@ -30,7 +42,7 @@ export function Header() {
             TalentScreen
           </h1>
           <div className="text-sm text-muted-foreground">
-            {user.role === "recruiter"
+            {user.role === "hr"
               ? "Recruiter Portal"
               : "Candidate Portal"}
           </div>
@@ -62,17 +74,8 @@ export function Header() {
                 </p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            
+            <DropdownMenuItem onClick={() => logoutApplication()}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>

@@ -10,28 +10,22 @@ import { Input } from "@/app/(components)/ui/input"
 import { Label } from "@/app/(components)/ui/label"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/app/(components)/ui/tabs"
 import Link from "next/link"
+import { useLogin } from "./signup/query/query"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [userType, setUserType] = useState<"candidate" | "recruiter">("candidate")
-  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const { loginMutation } = useLogin()
+
+  
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Mock authentication - redirect based on user type
-    if (userType === "recruiter") {
-      window.location.href = "/recruiter/dashboard"
-    } else {
-      window.location.href = "/candidate/dashboard"
-    }
-
-    setIsLoading(false)
+    loginMutation({
+      email,
+      password
+    })
   }
 
   return (
@@ -85,8 +79,8 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : `Sign in as ${userType === "candidate" ? "Candidate" : "Recruiter"}`}
+                <Button type="submit" className="w-full">
+                  {`Sign in as ${userType === "candidate" ? "Candidate" : "Recruiter"}`}
                 </Button>
               </form>
 
