@@ -231,7 +231,12 @@ def create_job(
     current_user: models.User = Depends(security.hr_required),
     db: Session = Depends(database.get_db),
 ):
-    new_job = models.Job(**job.model_dump())
+    # Convert job data to dict and add recruiter_id
+    job_data = job.model_dump()
+    job_data["recruiter_id"] = current_user.id
+
+    # Create new job with recruiter_id
+    new_job = models.Job(**job_data)
     db.add(new_job)
     db.commit()
     db.refresh(new_job)

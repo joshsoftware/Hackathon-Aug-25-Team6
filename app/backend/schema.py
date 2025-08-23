@@ -52,11 +52,12 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 class JobCreate(BaseModel):
+    title: str
+    company: str
     location: str
     experience: str
     job_overview: str
     key_responsibilities: str
-    required_skills: str
     must_have_skills: str
     good_to_have_skills: Optional[str] = None
     job_type: str
