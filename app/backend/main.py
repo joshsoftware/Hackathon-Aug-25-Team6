@@ -364,7 +364,6 @@ async def start_interview(request: StartInterviewRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error starting interview: {str(e)}")
-
 @app.post("/answer-question", response_model=AnswerQuestionResponse)
 async def answer_question(request: AnswerQuestionRequest):
     """Submit answer and get next question"""
@@ -388,6 +387,16 @@ async def answer_question(request: AnswerQuestionRequest):
         )
         session.question_responses.append(qa_response)
         
+        # Check if we've reached the maximum number of questions (4-5)
+        if len(session.question_responses) >= 5:  # You can change this to 4 if preferred
+            session.status = "completed"
+            return AnswerQuestionResponse(
+                next_question="Thank you for your time and detailed responses! The interview is now complete.",
+                is_interview_complete=True,
+                question_number=len(session.question_responses),
+                session_status="completed"
+            )
+        
         # Determine next question
         next_question = None
         is_complete = False
@@ -399,24 +408,33 @@ async def answer_question(request: AnswerQuestionRequest):
         else:
             # Generate dynamic follow-up question
             try:
-                followup = question_generator.generate_followup_question(
-                    session, current_question, request.answer
-                )
-                
-                if followup:
-                    session.questions.append(followup)
-                    session.current_question_index += 1
-                    next_question = followup
+                # Only generate follow-up if we haven't reached 4 questions yet
+                if len(session.question_responses) < 4:  # You can adjust this number
+                    followup = question_generator.generate_followup_question(
+                        session, current_question, request.answer
+                    )
+                    
+                    if followup:
+                        session.questions.append(followup)
+                        session.current_question_index += 1
+                        next_question = followup
+                    else:
+                        # End interview with thank you message
+                        session.status = "completed"
+                        is_complete = True
+                        next_question = "Thank you for your time and detailed responses! The interview is now complete."
                 else:
-                    # End interview
+                    # End interview with thank you message
                     session.status = "completed"
                     is_complete = True
+                    next_question = "Thank you for your time and detailed responses! The interview is now complete."
                     
             except Exception as e:
                 print(f"Error generating follow-up: {e}")
                 # End interview gracefully if we can't generate more questions
                 session.status = "completed"
                 is_complete = True
+                next_question = "Thank you for your time and detailed responses! The interview is now complete."
         
         return AnswerQuestionResponse(
             next_question=next_question,
@@ -510,11 +528,191 @@ async def health_check():
         "version": "1.0.0"
     }
 
-if __name__ == "__main__":
-    import uvicorn
-    print("�� Starting Interview Question Generator with Claude")
-    print("�� Health check: http://localhost:8000/health")
-    print("📚 API docs: http://localhost:8000/docs")
-    print("🔧 Claude status: http://localhost:8000/claude/status")
-    
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+from typing import List, Optional
+from datetime import datetime
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+# Schema definitions
+class CandidateInterview(BaseModel):
+    resume_data: dict  # CV data
+    jd_data: dict     # Job Description data
+    questions: List[str]
+    answers: List[str]
+    created_at: datetime = datetime.now()
+
+class InterviewResponse(BaseModel):
+    questions: List[str]
+    message: str
+
+class AnswerSubmission(BaseModel):
+    answers: List[str]  # List of answers corresponding to questions
+
+class AssessmentReport(BaseModel):
+    technical_skills_match: float  # Percentage match with required skills
+    relevant_experience: str
+    communication_score: float
+    strengths: List[str]
+    areas_of_improvement: List[str]
+    job_fit_score: float  # 0-1 score indicating overall fit
+    recommendation: str
+    detailed_feedback: dict
+
+@app.post("/generate-interview", response_model=InterviewResponse)
+async def generate_interview(
+    job_id: int,
+    current_user: models.User = Depends(security.candidate_required),
+    db: Session = Depends(database.get_db)
+):
+    """Generate interview questions based on CV and JD match"""
+    try:
+        # Get job details
+        job = db.query(models.Job).filter(models.Job.job_id == job_id).first()
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        # Get candidate's application
+        application = db.query(models.JobApplication).filter(
+            models.JobApplication.job_id == job_id,
+            models.JobApplication.email == current_user.email
+        ).first()
+
+        if not application:
+            raise HTTPException(status_code=400, detail="Please apply for the job first")
+
+        # Generate questions based on resume and JD
+        questions = question_generator.generate_initial_questions(
+            resume_data=application.parsed_resume,  # Using parsed resume data
+            jd_data={
+                "title": job.title,
+                "company": job.company,
+                "skills": {
+                    "must_have": job.must_have_skills.split(","),
+                    "good_to_have": job.good_to_have_skills.split(",") if job.good_to_have_skills else []
+                },
+                "responsibilities": job.key_responsibilities
+            }
+        )
+
+        # Ensure we have 4-5 questions
+        questions = questions[:5] if len(questions) > 5 else questions
+        while len(questions) < 4:
+            questions.append("Tell me about a challenging project you worked on.")
+
+        # Store questions in database
+        stored_questions = []
+        for question_text in questions:
+            question = models.Question(
+                text=question_text,
+                tags=f"job_{job_id},generated",
+                is_generated=True,
+                job_id=job_id
+            )
+            db.add(question)
+            db.flush()  # Get the question ID
+            stored_questions.append(question)
+
+        db.commit()
+
+        return InterviewResponse(
+            questions=[{
+                "id": q.id,
+                "text": q.text
+            } for q in stored_questions],
+            message="Please provide answers to all questions for assessment."
+        )
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating interview questions: {str(e)}"
+        )
+
+@app.post("/submit-answers", response_model=AssessmentReport)
+async def submit_answers(
+    job_id: int,
+    answers: List[dict],  # List of {"question_id": int, "answer": str}
+    current_user: models.User = Depends(security.candidate_required),
+    db: Session = Depends(database.get_db)
+):
+    """Submit answers and generate assessment"""
+    try:
+        # Verify job exists and user has applied
+        job = db.query(models.Job).filter(models.Job.job_id == job_id).first()
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        application = db.query(models.JobApplication).filter(
+            models.JobApplication.job_id == job_id,
+            models.JobApplication.email == current_user.email
+        ).first()
+
+        if not application:
+            raise HTTPException(status_code=400, detail="No job application found")
+
+        # Store answers
+        qa_pairs = []
+        for answer_data in answers:
+            question = db.query(models.Question).get(answer_data["question_id"])
+            if not question:
+                raise HTTPException(status_code=400, detail=f"Question {answer_data['question_id']} not found")
+
+            # Create answer record
+            answer = models.QuestionAnswer(
+                question_id=question.id,
+                candidate_id=current_user.id,
+                job_id=job_id,
+                answer=answer_data["answer"]
+            )
+            db.add(answer)
+            qa_pairs.append((question.text, answer_data["answer"]))
+
+        # Generate assessment
+        assessment = question_generator.analyze_interview_responses(
+            resume_data=application.parsed_resume,
+            jd_data={
+                "title": job.title,
+                "company": job.company,
+                "skills": {
+                    "must_have": job.must_have_skills.split(","),
+                    "good_to_have": job.good_to_have_skills.split(",") if job.good_to_have_skills else []
+                },
+                "responsibilities": job.key_responsibilities
+            },
+            qa_pairs=qa_pairs
+        )
+
+        # Store assessment in QuestionScore
+        score = models.QuestionScore(
+            application_id=application.id,
+            candidate_id=current_user.id,
+            technical_correctness=int(assessment['skills_match'] * 100),
+            specificity_depth=int(assessment.get('depth_score', 70)),
+            reasoning_quality=int(assessment.get('reasoning_score', 70)),
+            communication=int(assessment['communication_score'] * 100),
+            final_score=int(assessment['fit_score'] * 100),
+            verdict=assessment['recommendation'],
+            improvement_tips=", ".join(assessment['areas_of_improvement'])
+        )
+        db.add(score)
+        db.commit()
+
+        return AssessmentReport(
+            technical_skills_match=assessment.get('skills_match', 0.0),
+            relevant_experience=assessment.get('experience_relevance', ''),
+            communication_score=assessment.get('communication_score', 0.0),
+            strengths=assessment.get('strengths', []),
+            areas_of_improvement=assessment.get('improvements', []),
+            job_fit_score=assessment.get('fit_score', 0.0),
+            recommendation=assessment.get('recommendation', ''),
+            detailed_feedback=assessment.get('detailed_feedback', {})
+        )
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing answers: {str(e)}"
+        )

@@ -1,6 +1,7 @@
+from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String,
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer, String,
                         Text)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -74,10 +75,12 @@ class Question(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     text = Column(String, nullable=False)
     tags = Column(String, nullable=True)
+    # Add new field to identify auto-generated questions
+    is_generated = Column(Boolean, default=False)
+    job_id = Column(Integer, ForeignKey("jobs.job_id"), nullable=True)  # Optional link to specific job
 
     question_answers = relationship("QuestionAnswer", back_populates="question")
     question_scores = relationship("QuestionScore", back_populates="question")
-
 
 class QuestionAnswer(Base):
     __tablename__ = "question_answers"
@@ -85,12 +88,13 @@ class QuestionAnswer(Base):
     id = Column(Integer, primary_key=True, index=True)
     question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
     candidate_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    resume_path = Column(String, nullable=False)
-    jd_path = Column(String, nullable=False)
+    job_id = Column(Integer, ForeignKey("jobs.job_id"), nullable=False)  # Add this field
     answer = Column(Text, nullable=False)
-
+    created_at = Column(DateTime, default=datetime.now)
+    
     question = relationship("Question", back_populates="question_answers")
     candidate = relationship("User", back_populates="question_answers")
+    job = relationship("Job", back_populates="question_answers")
 
 
 class QuestionScore(Base):
