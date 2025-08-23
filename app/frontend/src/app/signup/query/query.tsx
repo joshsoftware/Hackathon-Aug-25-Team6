@@ -88,15 +88,11 @@ export const useLogin = () => {
         onSuccess: (response) => {
             const { access_token, user, token_type } = response.data;
             
-            const capitalizedTokenType = token_type.charAt(0).toUpperCase() + token_type.slice(1);
-
-            // Store token
-            localStorage.setItem('token', `${capitalizedTokenType} ${access_token}`);
+            localStorage.setItem('token', `${token_type} ${access_token}`);
             localStorage.setItem('userDetails', JSON.stringify(user))
             
             toast.success("You've successfully logged in.");
 
-            // Redirect based on role
             if (user.role === 'hr') {
                 router.push('/recruiter/dashboard');
             } else {

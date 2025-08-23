@@ -1,13 +1,16 @@
 from datetime import timedelta
+import json
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
 from app.backend.api.score import score_router
 from app.backend.utils import create_tables, save_upload_file
+from app.backend.service.parser import parse_file_with_ai
+from app.backend.prompts.prompt import get_prompt
 
 # create tables
 create_tables()
@@ -108,6 +111,7 @@ def get_jobs(
     status_code=status.HTTP_201_CREATED,
 )
 async def apply_for_job(
+    background_tasks: BackgroundTasks,
     application: schema.JobApplicationCreate = Depends(),
     resume: UploadFile = File(...),
     current_user: models.User = Depends(security.candidate_required),
@@ -120,19 +124,51 @@ async def apply_for_job(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
-    # Save resume file and create application
+    # Save resume file
     resume_path = save_upload_file(resume, application.email)
 
+    # Create application with parsed_resume set to None (will be filled by background task)
     new_application = models.JobApplication(
-        **application.model_dump(), resume_path=resume_path
+        **application.model_dump(), resume_path=resume_path, parsed_resume=None
     )
     db.add(new_application)
     db.commit()
     db.refresh(new_application)
 
+    # Schedule background task to parse resume
+    background_tasks.add_task(process_resume_in_background, new_application.id, resume_path)
+
     return schema.JobApplicationResponse(
         **application.model_dump(),
         id=new_application.id,
         resume_path=resume_path,
-        message="Application submitted successfully"
+        parsed_resume=None,
+        message="Application submitted successfully. Resume parsing in background"
     )
+
+
+
+def process_resume_in_background(application_id: int, resume_path: str) -> None:
+    """Background task to parse resume and update the JobApplication record."""
+    db_session = database.SessionLocal()
+    try:
+        try:
+            prompt = get_prompt("parse_resume")
+            result = (
+                parse_file_with_ai(resume_path, prompt)
+                if prompt
+                else {"error": "Missing parse_resume prompt"}
+            )
+        except Exception as e:
+            result = {"error": f"Failed to parse resume: {str(e)}"}
+
+        app_obj = (
+            db_session.query(models.JobApplication)
+            .filter(models.JobApplication.id == application_id)
+            .first()
+        )
+        if app_obj:
+            app_obj.parsed_resume = result
+            db_session.commit()
+    finally:
+        db_session.close()
