@@ -15,6 +15,8 @@ import { Input } from "@/app/(components)/ui/input";
 import { Search, Plus, MapPin, Briefcase, Users, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useGetJobs, IJob } from "./query/query";
+import { JobCardSkeleton } from "./(components)/JobCardSkeleton";
+import { StatsCardSkeleton } from "./(components)/StatsCardSkeleton";
 
 export default function RecruiterJobsPage() {
   const { data: jobs, isLoading, isError } = useGetJobs();
@@ -39,7 +41,7 @@ export default function RecruiterJobsPage() {
           </div>
 
           <Link href="/recruiter/jobs/new">
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2" disabled={isLoading}>
               <Plus className="h-4 w-4" />
               Add Job Opening
             </Button>
@@ -57,23 +59,25 @@ export default function RecruiterJobsPage() {
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
+              <Button variant="outline" disabled={isLoading}>Filter</Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Loading and Error States */}
+        {/* Stats Cards (Optional) - Add if you have stats in your design */}
         {isLoading && (
-          <div className="flex justify-center p-8">
-            <div className="animate-pulse space-y-4">
-              <div className="h-12 bg-muted rounded w-3/4"></div>
-              <div className="h-64 bg-muted rounded"></div>
-              <div className="h-64 bg-muted rounded"></div>
-            </div>
+          <div className="grid gap-4 md:grid-cols-4">
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
           </div>
         )}
 
+        {/* Error State */}
         {isError && (
           <Card className="bg-destructive/10">
             <CardContent className="p-6">
@@ -95,10 +99,16 @@ export default function RecruiterJobsPage() {
           </Card>
         )}
 
-        {/* Job Listings */}
-        {!isLoading && !isError && filteredJobs && (
-          <div className="grid gap-6">
-            {filteredJobs.map((job) => (
+        {/* Job Listings with Skeleton Loading */}
+        <div className="grid gap-6">
+          {isLoading ? (
+            // Skeleton Loading State
+            Array(3).fill(0).map((_, index) => (
+              <JobCardSkeleton key={`skeleton-${index}`} />
+            ))
+          ) : !isError && filteredJobs ? (
+            // Actual Job Listings
+            filteredJobs.map((job) => (
               <Card key={job.job_id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -108,7 +118,6 @@ export default function RecruiterJobsPage() {
                         {job.company}
                       </CardDescription>
                     </div>
-                    {/* You may want to add a status field to your API */}
                     <Badge variant="default">
                       Active
                     </Badge>
@@ -169,9 +178,9 @@ export default function RecruiterJobsPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ))
+          ) : null}
+        </div>
       </div>
     </DashboardLayout>
   );

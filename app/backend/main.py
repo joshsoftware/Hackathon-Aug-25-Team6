@@ -16,6 +16,7 @@ from app.backend.anthropic_integration import AnthropicInterviewGenerator, check
 
 from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
+from app.backend.api.users import user_router
 # from app.backend.api.questions_score import question_score_router
 from app.backend.utils import create_tables, save_upload_file
 from app.backend.schema import (
@@ -49,7 +50,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(question_router)
-# app.include_router(question_score_router)
+app.include_router(user_router)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 

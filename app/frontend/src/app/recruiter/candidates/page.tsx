@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { DashboardLayout } from "@/app/(components)/(layout)/dashboard-layout";
 import { Card, CardContent } from "@/app/(components)/ui/card";
 import { Button } from "@/app/(components)/ui/button";
@@ -8,53 +11,56 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/app/(components)/ui/avatar";
-import { mockJobs, mockApplications } from "@/app/(lib)/mock-data";
-import { Search, TrendingUp, MessageSquare, Briefcase } from "lucide-react";
+import { Search, TrendingUp, Briefcase } from "lucide-react";
+import Link from "next/link";
+import { useGetApplicants, ICandidate } from "./query/query";
+import { Skeleton } from "@/app/(components)/ui/skeleton";
 
 export default function AllCandidatesPage() {
-  // Get all unique candidates across all jobs
-  const allCandidates = mockApplications.reduce(
-    (acc, app) => {
-      const existing = acc.find((c) => c.candidateId === app.candidateId);
-      if (existing) {
-        existing.applications.push(app);
-      } else {
-        acc.push({
-          candidateId: app.candidateId,
-          candidateName: app.candidateName,
-          candidateEmail: app.candidateEmail,
-          applications: [app],
-          averageMatchScore: app.matchScore || 0,
-          lastActivity: app.appliedDate,
-        });
-      }
-      return acc;
-    },
-    [] as Array<{
-      candidateId: string;
-      candidateName: string;
-      candidateEmail: string;
-      applications: typeof mockApplications;
-      averageMatchScore: number;
-      lastActivity: string;
-    }>
+  const { data: allApplicants, isLoading, isError } = useGetApplicants();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter candidates based on search
+  const filteredCandidates = allApplicants?.filter(
+    (candidate) =>
+      candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      candidate.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Calculate average match scores
-  allCandidates.forEach((candidate) => {
-    const scores = candidate.applications
-      .filter((app) => app.matchScore)
-      .map((app) => app.matchScore!);
-    candidate.averageMatchScore =
-      scores.length > 0
-        ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-        : 0;
-  });
+  // Get only candidate users (role === "candidate")
+  const candidates = filteredCandidates?.filter(
+    (applicant) => applicant.role === "candidate"
+  );
+
+  // Calculate total applications across all candidates
+  const totalApplications = candidates?.reduce(
+    (sum, candidate) => sum + candidate.job_applications.length,
+    0
+  ) || 0;
+
+  // Calculate number of candidates in interview stage (if status is available)
+  const inInterviewCount = candidates?.reduce(
+    (sum, candidate) =>
+      sum +
+      candidate.job_applications.filter(
+        (app) => app.status === "interview"
+      ).length,
+    0
+  ) || 0;
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
     return "text-red-600";
+  };
+
+  // Helper function to get initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
   return (
@@ -71,51 +77,72 @@ export default function AllCandidatesPage() {
             </p>
           </div>
 
-          {/* Stats */}
+          {/* Stats with Skeleton Loading */}
           <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{allCandidates.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Total Candidates
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold">
-                  {mockApplications.length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Total Applications
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold">
-                  {
-                    mockApplications.filter((app) => app.status === "interview")
-                      .length
-                  }
-                </div>
-                <p className="text-xs text-muted-foreground">In Interview</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold">
-                  {Math.round(
-                    allCandidates.reduce(
-                      (sum, candidate) => sum + candidate.averageMatchScore,
-                      0
-                    ) / allCandidates.length || 0
-                  )}
-                  %
-                </div>
-                <p className="text-xs text-muted-foreground">Avg Match Score</p>
-              </CardContent>
-            </Card>
+            {isLoading ? (
+              // Skeleton Loaders for Stats Cards
+              <>
+                <Card>
+                  <CardContent className="pt-6">
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </CardContent>
+                </Card>
+              </>
+            ) : !isError && candidates ? (
+              // Actual Stats Content
+              <>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">{candidates.length}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Total Candidates
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">{totalApplications}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Total Applications
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">{inInterviewCount}</div>
+                    <p className="text-xs text-muted-foreground">In Interview</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">
+                      {/* If you have match scores in your API, calculate average here */}
+                      -
+                    </div>
+                    <p className="text-xs text-muted-foreground">Avg Match Score</p>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
           </div>
         </div>
 
@@ -125,113 +152,145 @@ export default function AllCandidatesPage() {
             <div className="flex items-center gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search candidates..." className="pl-10" />
+                <Input 
+                  placeholder="Search candidates..." 
+                  className="pl-10" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={isLoading}
+                />
               </div>
-              <Button variant="outline">Filter</Button>
-              <Button variant="outline">Export</Button>
+              <Button variant="outline" disabled={isLoading}>Filter</Button>
+              <Button variant="outline" disabled={isLoading}>Export</Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Candidates List */}
-        <div className="space-y-4">
-          {allCandidates.map((candidate) => (
-            <Card
-              key={candidate.candidateId}
-              className="hover:shadow-md transition-shadow"
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage
-                        src={`/abstract-geometric-shapes.png?height=48&width=48&query=${candidate.candidateName}`}
-                      />
-                      <AvatarFallback>
-                        {candidate.candidateName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-foreground">
-                        {candidate.candidateName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {candidate.candidateEmail}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {candidate.applications.length} applications
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          Last activity:{" "}
-                          {new Date(
-                            candidate.lastActivity
-                          ).toLocaleDateString()}
-                        </span>
+        {/* Error State */}
+        {isError && (
+          <Card className="bg-destructive/10">
+            <CardContent className="p-6">
+              <p className="text-center text-destructive">
+                Failed to load candidates. Please try again later.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* No Results */}
+        {!isLoading && !isError && candidates?.length === 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-center text-muted-foreground">
+                No candidates found.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Skeleton Loader for Candidates */}
+        {isLoading && (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="hover:shadow-md transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-4 w-60" />
+                        <Skeleton className="h-6 w-32" />
                       </div>
                     </div>
+                    <div className="flex items-center gap-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                      <Skeleton className="h-9 w-32" />
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-                  <div className="flex items-center gap-4">
-                    {candidate.averageMatchScore > 0 && (
-                      <div className="text-center">
-                        <div
-                          className={`text-2xl font-bold ${getScoreColor(
-                            candidate.averageMatchScore
-                          )}`}
-                        >
-                          {candidate.averageMatchScore}%
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Avg Match
+        {/* Candidates List */}
+        {!isLoading && !isError && candidates && (
+          <div className="space-y-4">
+            {candidates.map((candidate) => (
+              <Card
+                key={candidate.user_id}
+                className="hover:shadow-md transition-shadow"
+              >
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage
+                          src={`/abstract-geometric-shapes.png?height=48&width=48&query=${candidate.name}`}
+                        />
+                        <AvatarFallback>
+                          {getInitials(candidate.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-foreground">
+                          {candidate.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {candidate.email}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {candidate.job_applications.length} applications
+                          </Badge>
                         </div>
                       </div>
-                    )}
+                    </div>
 
-                    <div className="space-y-2">
-                      {candidate.applications.slice(0, 2).map((app) => {
-                        const job = mockJobs.find((j) => j.id === app.jobId);
-                        return (
+                    <div className="flex items-center gap-4">
+                      {/* Add match score display if you have that data */}
+
+                      <div className="space-y-2">
+                        {candidate.job_applications.slice(0, 2).map((app) => (
                           <div
-                            key={app.id}
+                            key={app.application_id}
                             className="flex items-center gap-2 text-sm"
                           >
                             <Briefcase className="h-3 w-3 text-muted-foreground" />
                             <span className="text-muted-foreground">
-                              {job?.title}
+                              {app.job_title}
                             </span>
                             <Badge variant="outline" className="text-xs">
-                              {app.status}
+                              {app.status || "pending"}
                             </Badge>
                           </div>
-                        );
-                      })}
-                      {candidate.applications.length > 2 && (
-                        <div className="text-xs text-muted-foreground">
-                          +{candidate.applications.length - 2} more applications
-                        </div>
-                      )}
-                    </div>
+                        ))}
+                        {candidate.job_applications.length > 2 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{candidate.job_applications.length - 2} more applications
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Message
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <TrendingUp className="h-4 w-4 mr-2" />
-                        View Profile
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/recruiter/candidates/${candidate.user_id}`}>
+                          <Button variant="outline" size="sm">
+                            <TrendingUp className="h-4 w-4 mr-2" />
+                            View Profile
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
