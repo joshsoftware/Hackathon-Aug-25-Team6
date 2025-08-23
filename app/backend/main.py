@@ -1,5 +1,9 @@
+import uuid
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
+
+from minio import Minio
+from minio.error import S3Error
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
@@ -7,13 +11,28 @@ from sqlalchemy.orm import Session
 from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
 from app.backend.api.questions_score import question_score_router
-from app.backend.utils import create_tables, save_upload_file
+from app.backend.utils import create_tables, save_upload_file, upload_file_to_minio
 from fastapi.middleware.cors import CORSMiddleware
 
 # create tables
 create_tables()
 
 app = FastAPI()
+
+# MinIO setup
+minio_client = Minio(
+    "localhost:9000",  # MinIO server
+    access_key="minioadmin",
+    secret_key="minioadmin",
+    secure=False  # False for HTTP
+)
+
+MINIO_BUCKET = "pdf-files"
+
+# Ensure bucket exists
+if not minio_client.bucket_exists(MINIO_BUCKET):
+    minio_client.make_bucket(MINIO_BUCKET)
+
 
 # CORS settings for frontend at http://localhost:3000
 app.add_middleware(
@@ -135,3 +154,9 @@ async def apply_for_job(
         resume_path=resume_path,
         message="Application submitted successfully"
     )
+
+@app.post("/upload/")
+async def upload_pdf(resume: UploadFile = File(...)):
+    file_url = upload_file_to_minio(resume, MINIO_BUCKET, minio_client)
+    return {"file_url": file_url, "message": "File uploaded successfully"}
+

@@ -1,8 +1,10 @@
 import os
 import shutil
 from datetime import datetime
+import uuid
 
 from fastapi import HTTPException, UploadFile, status
+from minio import Minio, S3Error
 from passlib.context import CryptContext
 
 from app.backend import config, database
@@ -39,3 +41,25 @@ def create_tables():
         print("Tables created successfully!")
     except Exception as e:
         print(f"Error creating tables: {e}")
+
+
+def upload_file_to_minio(file: UploadFile, bucket_name: str, client: Minio) -> str:
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDFs are allowed")
+    
+    file_extension = file.filename.split(".")[-1]
+    object_name = f"{uuid.uuid4()}.{file_extension}"
+
+    try:
+        client.put_object(
+            bucket_name,
+            object_name,
+            file.file,
+            length=-1,
+            part_size=10*1024*1024
+        )
+    except S3Error as e:
+        raise HTTPException(status_code=500, detail=f"MinIO error: {e}")
+    
+    # Return direct URL to access file
+    return f"http://localhost:9000/{bucket_name}/{object_name}"
