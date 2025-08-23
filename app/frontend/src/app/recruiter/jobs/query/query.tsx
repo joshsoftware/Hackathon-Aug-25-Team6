@@ -1,3 +1,4 @@
+"use client"
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/app/(auth)/axiosInstance";
@@ -6,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 
 const JOB_API = {
     CREATEJOB: "/jobs",
-    GETJOBSBYID: "/getsinglejob",
+    GETJOBSBYID: "/jobs/",
     GETLISTOFJOBS: "/jobs",
     DELETEJOB: "/deletejob",
 };
@@ -97,12 +98,46 @@ export const useGetJobs = () => {
                 if(error.status === 401){
                     toast.error("Your session has expired. Please log in again.");
                     localStorage.clear()
-                    router.push('/')
+                    // router.push('/')
                 }
                 
                 toast.error(error?.detail || "Failed to fetch jobs");
                 throw error;
             }
         }
+    });
+};
+
+export const useGetJobById = (jobId: string) => {
+    const router = useRouter();
+    
+    return useQuery<IJob, Error>({
+        queryKey: ['getjobByJobID', jobId],
+        queryFn: async () => {
+            try {
+                const response = await axiosInstance.get(`${JOB_API.GETLISTOFJOBS}/${jobId}`);
+                
+                const job = response.data;
+                return {
+                    ...job,
+                    must_have_skills: job.must_have_skills
+                        ? job.must_have_skills.split(",").map((s: string) => s.trim()).filter(Boolean)
+                        : [],
+                    good_to_have_skills: job.good_to_have_skills
+                        ? job.good_to_have_skills.split(",").map((s: string) => s.trim()).filter(Boolean)
+                        : [],
+                };
+            } catch (error: any) {
+                if(error.status === 401){
+                    toast.error("Please Log in Again");
+                    localStorage.clear()
+                    router.push('/')
+                }
+                
+                toast.error(error?.detail || "Failed to fetch job");
+                throw error;
+            }
+        },
+        enabled: !!jobId,
     });
 };

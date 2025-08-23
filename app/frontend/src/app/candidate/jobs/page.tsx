@@ -20,9 +20,11 @@ import {
   Calendar,
   Bookmark,
   BookmarkCheck,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useMemo } from "react";
+import { useGetJobs, IJob } from "@/app/recruiter/jobs/query/query";
 
 export default function CandidateJobsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,53 +32,34 @@ export default function CandidateJobsPage() {
   const [locationFilters, setLocationFilters] = useState<string[]>([]);
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [salaryFilters, setSalaryFilters] = useState<string[]>([]);
+  const { data: jobs, isLoading, isError } = useGetJobs();
 
-  const activeJobs = mockJobs.filter((job) => job.status === "active");
+
+  const activeJobs = jobs;
 
   const filteredJobs = useMemo(() => {
-    return activeJobs.filter((job) => {
+    return activeJobs?.filter((job) => {
       // Search filter
       const matchesSearch =
         searchQuery === "" ||
         job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.mustHaveSkills.some((skill) =>
+        job.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.must_have_skills.some((skill) =>
           skill.toLowerCase().includes(searchQuery.toLowerCase())
         );
-
       // Location filter
       const matchesLocation = locationFilters.length === 0 || locationFilters.includes(job.location);
 
       // Type filter
-      const matchesType = typeFilters.length === 0 || typeFilters.includes(job.type);
+      const matchesType = typeFilters.length === 0 || typeFilters.includes(job.job_type);
 
-      // Salary filter
-      const matchesSalary =
-        salaryFilters.length === 0 ||
-        salaryFilters.some((range) => {
-          if (!job.salary) return false;
-          const minSalary = job.salary.min;
-          switch (range) {
-            case "0-50k":
-              return minSalary < 50000;
-            case "50k-100k":
-              return minSalary >= 50000 && minSalary < 100000;
-            case "100k-150k":
-              return minSalary >= 100000 && minSalary < 150000;
-            case "150k+":
-              return minSalary >= 150000;
-            default:
-              return true;
-          }
-        });
-
-      return matchesSearch && matchesLocation && matchesType && matchesSalary;
+      return matchesSearch && matchesLocation && matchesType;
     });
-  }, [activeJobs, searchQuery, locationFilters, typeFilters, salaryFilters]);
+  }, [activeJobs, searchQuery, locationFilters, typeFilters]);
 
   const locationOptions = Array.from(
-    new Set(activeJobs.map((job) => job.location))
+    new Set(activeJobs?.map((job) => job.location))
   ).map((location) => ({
     label: location,
     value: location,
@@ -84,35 +67,12 @@ export default function CandidateJobsPage() {
   }));
 
   const typeOptions = Array.from(
-    new Set(activeJobs.map((job) => job.type))
+    new Set(activeJobs?.map((job) => job.job_type))
   ).map((type) => ({
     label: type,
     value: type,
     checked: typeFilters.includes(type),
   }));
-
-  const salaryOptions = [
-    {
-      label: "Under $50k",
-      value: "0-50k",
-      checked: salaryFilters.includes("0-50k"),
-    },
-    {
-      label: "$50k - $100k",
-      value: "50k-100k",
-      checked: salaryFilters.includes("50k-100k"),
-    },
-    {
-      label: "$100k - $150k",
-      value: "100k-150k",
-      checked: salaryFilters.includes("100k-150k"),
-    },
-    {
-      label: "$150k+",
-      value: "150k+",
-      checked: salaryFilters.includes("150k+"),
-    },
-  ];
 
   const handleLocationFilter = (value: string, checked: boolean) => {
     setLocationFilters((prev) =>
@@ -122,12 +82,6 @@ export default function CandidateJobsPage() {
 
   const handleTypeFilter = (value: string, checked: boolean) => {
     setTypeFilters((prev) =>
-      checked ? [...prev, value] : prev.filter((item) => item !== value)
-    );
-  };
-
-  const handleSalaryFilter = (value: string, checked: boolean) => {
-    setSalaryFilters((prev) =>
       checked ? [...prev, value] : prev.filter((item) => item !== value)
     );
   };
@@ -150,7 +104,7 @@ export default function CandidateJobsPage() {
             <h1 className="text-3xl font-bold text-foreground">Job Openings</h1>
             <p className="text-muted-foreground">
               Discover opportunities that match your skills and interests •{" "}
-              {filteredJobs.length} jobs found
+              {filteredJobs?.length} jobs found
             </p>
           </div>
         </div>
@@ -175,12 +129,7 @@ export default function CandidateJobsPage() {
                   title="Job Type"
                   options={typeOptions}
                   onFilterChange={handleTypeFilter}
-                />
-                <FilterDropdown
-                  title="Salary Range"
-                  options={salaryOptions}
-                  onFilterChange={handleSalaryFilter}
-                />
+                />                
               </div>
             </div>
 
@@ -210,32 +159,27 @@ export default function CandidateJobsPage() {
                   >
                     {filter} ×
                   </Badge>
-                ))}
-                {salaryFilters.map((filter) => (
-                  <Badge
-                    key={filter}
-                    variant="secondary"
-                    className="cursor-pointer"
-                    onClick={() => handleSalaryFilter(filter, false)}
-                  >
-                    {salaryOptions.find((opt) => opt.value === filter)?.label} ×
-                  </Badge>
-                ))}
+                ))}               
               </div>
             )}
           </CardContent>
         </Card>
 
         <div className="grid gap-6">
-          {filteredJobs.length > 0 ? (
-            filteredJobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-md transition-shadow">
+          {(filteredJobs || []).length > 0 ? (
+            filteredJobs?.map((job) => (
+              <Card key={job.job_id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
                       <CardTitle className="text-xl">{job.title}</CardTitle>
-                      <CardDescription className="text-base">
-                        {job.company}
+                      <CardDescription className="text-base">                        
+                        <div className="flex items-center gap-1">
+                          <Building2 className="h-4 w-4" />
+                           {job.company}
+                          <MapPin className="h-4 w-4" />
+                           {job.location}
+                        </div>
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
@@ -243,10 +187,10 @@ export default function CandidateJobsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleSaveJob(job.id)}
+                        onClick={() => toggleSaveJob(job.job_id)}
                         className="h-8 w-8 p-0"
                       >
-                        {savedJobs.includes(job.id) ? (
+                        {savedJobs.includes(job.job_id) ? (
                           <BookmarkCheck className="h-4 w-4 text-primary" />
                         ) : (
                           <Bookmark className="h-4 w-4" />
@@ -256,27 +200,27 @@ export default function CandidateJobsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
+                  {/* <div className="flex items-center gap-6 text-sm text-muted-foreground"> */}
+                    {/* <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
                       {job.location}
-                    </div>
-                    {job.salary && (
+                    </div> */}
+                    {/* {job.salary && (
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4" />$
                         {job.salary.min.toLocaleString()} - $
                         {job.salary.max.toLocaleString()}
                       </div>
-                    )}
-                    <div className="flex items-center gap-1">
+                    )} */}
+                    {/* <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       Apply by{" "}
                       {new Date(job.applicationDeadline).toLocaleDateString()}
-                    </div>
-                  </div>
+                    </div> */}
+                  {/* </div> */}
 
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    {job.description}
+                    {job.job_overview}
                   </p>
 
                   <div className="space-y-2">
@@ -284,33 +228,33 @@ export default function CandidateJobsPage() {
                       Required Skills:
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {job.mustHaveSkills.slice(0, 5).map((skill) => (
+                      {job.must_have_skills.slice(0, 5).map((skill) => (
                         <Badge key={skill} variant="default">
                           {skill}
                         </Badge>
                       ))}
-                      {job.mustHaveSkills.length > 5 && (
+                      {job.must_have_skills.length > 5 && (
                         <Badge variant="outline">
-                          +{job.mustHaveSkills.length - 5} more
+                          +{job.must_have_skills.length - 5} more
                         </Badge>
                       )}
                     </div>
                   </div>
 
-                  {job.goodToHaveSkills.length > 0 && (
+                  {job.good_to_have_skills.length > 0 && (
                     <div className="space-y-2">
                       <div className="text-sm font-medium text-foreground">
                         Preferred Skills:
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {job.goodToHaveSkills.slice(0, 4).map((skill) => (
+                        {job.good_to_have_skills.slice(0, 4).map((skill) => (
                           <Badge key={skill} variant="outline">
                             {skill}
                           </Badge>
                         ))}
-                        {job.goodToHaveSkills.length > 4 && (
+                        {job.good_to_have_skills.length > 4 && (
                           <Badge variant="outline">
-                            +{job.goodToHaveSkills.length - 4} more
+                            +{job.good_to_have_skills.length - 4} more
                           </Badge>
                         )}
                       </div>
@@ -318,7 +262,7 @@ export default function CandidateJobsPage() {
                   )}
 
                   <div className="flex items-center gap-2 pt-2">
-                    <Link href={`/candidate/jobs/${job.id}`} className="flex-1">
+                    <Link href={`/candidate/jobs/${job.job_id}`} className="flex-1">
                       <Button className="w-full">View Details & Apply</Button>
                     </Link>
                   </div>
