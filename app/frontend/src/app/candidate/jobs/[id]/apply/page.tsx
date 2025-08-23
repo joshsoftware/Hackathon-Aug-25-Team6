@@ -5,12 +5,16 @@ import { DashboardLayout } from "@/app/(components)/(layout)/dashboard-layout";
 import { Card, CardContent } from "@/app/(components)/ui/card";
 import { Button } from "@/app/(components)/ui/button";
 import { Progress } from "@/app/(components)/ui/progress";
-import { mockJobs } from "@/app/(lib)/mock-data";
 import { ResumeUpload } from "@/app/(components)/(application)/resume-upload";
 import { PrescreeningQuestions } from "@/app/(components)/(application)/prescreening-questions";
 import { ApplicationReview } from "@/app/(components)/(application)/application-review";
 import { CheckCircle, Upload, MessageSquare, Eye } from "lucide-react";
-import { notFound } from "next/navigation";
+import { useGetJobById } from "@/app/recruiter/jobs/query/query";
+import { Skeleton } from "@/app/(components)/ui/skeleton";
+import { adaptJobForComponents } from "@/app/(lib)/jobTypeAdaptor";
+import React from "react";
+import { useApplyForJob } from "./query/query";
+import { toast } from "react-toastify";
 
 interface ApplyPageProps {
   params: {
@@ -21,6 +25,12 @@ interface ApplyPageProps {
 type ApplicationStep = "resume" | "questions" | "review" | "submitted";
 
 export default function ApplyPage({ params }: ApplyPageProps) {
+  const jobId = params.id;
+  
+  const { data: apiJobData, isLoading, isError } = useGetJobById(jobId);
+  const { applyForJobMutation, isApplyPending } = useApplyForJob();
+
+
   const [currentStep, setCurrentStep] = useState<ApplicationStep>("resume");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [prescreeningAnswers, setPrescreeningAnswers] = useState<
@@ -28,11 +38,21 @@ export default function ApplyPage({ params }: ApplyPageProps) {
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const job = mockJobs.find((j) => j.id === params.id);
-
-  if (!job) {
-    notFound();
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Skeleton className="h-10 w-2/3 mb-4" />
+          <Skeleton className="h-6 w-1/3 mb-2" />
+          <Skeleton className="h-24 w-full mb-4" />
+          <Skeleton className="h-10 w-1/2 mb-2" />
+          <Skeleton className="h-10 w-1/2" />
+        </div>
+      </DashboardLayout>
+    );
   }
+  
+  const job = adaptJobForComponents(apiJobData!);
 
   const steps = [
     { id: "resume", title: "Upload Resume", icon: Upload },
@@ -55,13 +75,13 @@ export default function ApplyPage({ params }: ApplyPageProps) {
   };
 
   const handleSubmitApplication = async () => {
+    if (!resumeFile) {
+      toast.error("Resume is required to submit the application");
+      return;
+    }
+    
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setCurrentStep("submitted");
-    setIsSubmitting(false);
   };
 
   const renderStepContent = () => {
@@ -140,6 +160,33 @@ export default function ApplyPage({ params }: ApplyPageProps) {
               {job.company} • {job.location}
             </p>
           </div>
+
+          {/* Must have & Good to have skills */}
+          {/* <div className="flex flex-wrap gap-2">
+            {job.mustHaveSkills.length > 0 && (
+              <>
+                <span className="font-semibold text-sm text-foreground">Must have skills:</span>
+                {job.mustHaveSkills.map((skill: string) => (
+                  <Badge key={skill} variant="outline">
+                    {skill}
+                  </Badge>
+                ))}
+              </>
+            )}
+          </div> */}
+
+          {/* <div className="flex flex-wrap gap-2">
+            {job.goodToHaveSkills.length > 0 && (
+              <>
+                <span className="font-semibold text-sm text-foreground">Good to have skills:</span>
+                {job.goodToHaveSkills.map((skill: string) => (
+                  <Badge key={skill} variant="secondary">
+                    {skill}
+                  </Badge>
+                ))}
+              </>
+            )}
+          </div> */}
 
           {/* Progress */}
           <Card>

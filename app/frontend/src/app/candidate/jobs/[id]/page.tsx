@@ -41,40 +41,40 @@ export default function JobDetailPage() {
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-foreground">
-                {job.title}
+                {job!.title}
               </h1>
               <div className="flex items-center gap-2 text-lg text-muted-foreground">
                 <Building2 className="h-5 w-5" />
-                {job.company}
+                {job!.company}
               </div>
             </div>
             {/* <Badge
-              variant={job.status === "active" ? "default" : "secondary"}
+              variant={job!.status === "active" ? "default" : "secondary"}
               className="text-sm"
             >
-              {job.status}
+              {job!.status}
             </Badge> */}
           </div>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4" />
-              {job.location}
+              {job!.location}
             </div>
-            {/* {job.salary && (
+            {/* {job!.salary && (
               <div className="flex items-center gap-1">
                 <DollarSign className="h-4 w-4" />$
-                {job.salary.min.toLocaleString()} - $
-                {job.salary.max.toLocaleString()} {job.salary.currency}
+                {job!.salary.min.toLocaleString()} - $
+                {job!.salary.max.toLocaleString()} {job!.salary.currency}
               </div>
             )} */}
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
-              {job.job_type}
+              {job!.job_type}
             </div>
             {/* <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {job.applicantCount} applicants
+              {job!.applicantCount} applicants
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
@@ -95,7 +95,7 @@ export default function JobDetailPage() {
                   Upload your resume and complete our pre-screening questions
                 </p>
               </div>
-              <Link href={`/candidate/jobs/${job.job_id}/apply`}>
+              <Link href={`/candidate/jobs/${job!.job_id}/apply`}>
                 <Button size="lg" className="px-8">
                   Apply Now
                 </Button>
@@ -114,11 +114,9 @@ export default function JobDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
-                  {job.job_overview}
+                  {job!.job_overview}
                 </p>
-                <p className="text-muted-foreground leading-relaxed">
-                  {job.key_responsibilities}
-                </p>
+
               </CardContent>
             </Card>
 
@@ -128,18 +126,12 @@ export default function JobDetailPage() {
                 <CardTitle>Requirements</CardTitle>
               </CardHeader>
               <CardContent>
-                {/* <div className="space-y-4">
-                  {job.requirements.map((requirement, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                      <p className="text-muted-foreground">{requirement}</p>
-                    </div>
-                  ))}
-                </div> */}
+                <p className="text-muted-foreground leading-relaxed">
+                  {job!.key_responsibilities}
+                </p>
               </CardContent>
             </Card>
 
-            {/* Skills */}
             <Card>
               <CardHeader>
                 <CardTitle>Skills & Qualifications</CardTitle>
@@ -150,7 +142,7 @@ export default function JobDetailPage() {
                     Must-have Skills
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {job.must_have_skills.map((skill) => (
+                    {job!.must_have_skills.map((skill) => (
                       <Badge key={skill} variant="default">
                         {skill}
                       </Badge>
@@ -158,7 +150,7 @@ export default function JobDetailPage() {
                   </div>
                 </div>
 
-                {job.good_to_have_skills.length > 0 && (
+                {job!.good_to_have_skills.length > 0 && (
                   <>
                     <Separator />
                     <div className="space-y-3">
@@ -166,7 +158,7 @@ export default function JobDetailPage() {
                         Good-to-have Skills
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {job.good_to_have_skills.map((skill) => (
+                        {job!.good_to_have_skills.map((skill) => (
                           <Badge key={skill} variant="outline">
                             {skill}
                           </Badge>
@@ -187,7 +179,7 @@ export default function JobDetailPage() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Link href={`/candidate/jobs/${job.id}/apply`}>
+                <Link href={`/candidate/jobs/${job!.id}/apply`}>
                   <Button className="w-full">Apply for this Job</Button>
                 </Link>
                 <Button variant="outline" className="w-full bg-transparent">
@@ -210,7 +202,7 @@ export default function JobDetailPage() {
                     Posted Date
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {new Date(job.posted_date).toLocaleDateString()}
+                    {new Date(job!.posted_date).toLocaleDateString()}
                   </div>
                 </div>
                 <Separator />
@@ -227,7 +219,7 @@ export default function JobDetailPage() {
                   <div className="text-sm font-medium text-foreground">
                     Job Type
                   </div>
-                  <Badge variant="secondary">{job.job_type}</Badge>
+                  <Badge variant="secondary">{job!.job_type}</Badge>
                 </div>
                 <Separator />
                 <div className="space-y-2">
@@ -235,7 +227,7 @@ export default function JobDetailPage() {
                     Applicants
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {job.applications_count} candidates applied
+                    {job!.applications_count} candidates applied
                   </div>
                 </div>
               </CardContent>

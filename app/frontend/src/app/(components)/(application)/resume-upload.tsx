@@ -16,6 +16,8 @@ import { Label } from "@/app/(components)/ui/label";
 import { Alert, AlertDescription } from "@/app/(components)/ui/alert";
 import type { Job } from "@/app/(lib)/types";
 import { Upload, FileText, X, CheckCircle } from "lucide-react";
+import { useApplyForJob } from "@/app/candidate/jobs/[id]/apply/query/query";
+import { toast } from "react-toastify";
 
 interface ResumeUploadProps {
   job: Job;
@@ -28,6 +30,9 @@ export function ResumeUpload({ job, onUpload }: ResumeUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const { applyForJobMutation, isApplyPending } = useApplyForJob();
+
+  
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -77,16 +82,49 @@ export function ResumeUpload({ job, onUpload }: ResumeUploadProps) {
     }
   };
 
+// In the handleUpload function
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
     setIsUploading(true);
 
-    // Simulate file upload and parsing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Create FormData just for the resume file
+      const formData = new FormData();
+      formData.append('resume', selectedFile);
+      
+      // Add job_id to FormData temporarily - it will be extracted and used in query params
+      formData.append('job_id', job.id.toString());
+      
+      // Call the mutation with just the FormData
+      await applyForJobMutation(formData, {
+        onSuccess: (data) => {
+          toast.success("Resume uploaded and application started!");
+          onUpload(selectedFile);
+        },
+        onError: (error: any) => {
+          let message = "Failed to upload resume. Please try again.";
+          const detail = error?.response?.data?.detail || error?.response?.data?.error_msg;
 
-    setIsUploading(false);
-    onUpload(selectedFile);
+          if (typeof detail === "string") {
+            message = detail;
+          } else if (Array.isArray(detail)) {
+            // FastAPI validation errors: array of {loc, msg, ...}
+            message = detail.map((d) => d.msg).join(", ");
+          } else if (typeof detail === "object" && detail !== null) {
+            // If it's an object, try to extract a message
+            message = detail.msg || JSON.stringify(detail);
+          }
+
+          setUploadError(message);
+        },
+      });
+    } catch (error) {
+      setUploadError("Failed to upload resume. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const removeFile = () => {
@@ -101,7 +139,7 @@ export function ResumeUpload({ job, onUpload }: ResumeUploadProps) {
           <CardTitle>Upload Your Resume</CardTitle>
           <CardDescription>
             Upload your resume to automatically match your skills with the job
-            requirements for {job.title}
+            requirements for {job.title} <span className="text-destructive font-medium">*Required</span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -134,6 +172,7 @@ export function ResumeUpload({ job, onUpload }: ResumeUploadProps) {
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileInputChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                required
               />
             </div>
           ) : (
@@ -155,9 +194,9 @@ export function ResumeUpload({ job, onUpload }: ResumeUploadProps) {
                 </Button>
               </div>
 
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
                   Resume selected successfully. We&apos;ll analyze your skills and
                   experience to generate personalized pre-screening questions.
                 </AlertDescription>
@@ -187,6 +226,12 @@ export function ResumeUpload({ job, onUpload }: ResumeUploadProps) {
               </Button>
             )}
           </div>
+          
+          {!selectedFile && (
+            <p className="text-sm text-destructive">
+              A resume is required to apply for this position. Your resume will be used to evaluate your qualifications against the job requirements.
+            </p>
+          )}
         </CardContent>
       </Card>
 

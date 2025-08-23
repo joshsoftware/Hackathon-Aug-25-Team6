@@ -82,14 +82,14 @@ class JobResponse(BaseModel):
 
 class JobApplicationCreate(BaseModel):
     job_id: int
-    first_name: str
+    first_name: Optional[str] = None
     middle_name: Optional[str] = None
-    last_name: str
-    email: EmailStr
-    experience_years: int = Field(..., ge=0, le=50)
-    experience_months: int = Field(..., ge=0, le=11)
-    current_city: str
-    gender: Gender
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    experience_years: Optional[int] = Field(None, ge=0, le=50)  # Optional but validated when provided
+    experience_months: Optional[int] = Field(None, ge=0, le=11) # Optional but validated when provided
+    current_city: Optional[str] = None
+    gender: Optional[Gender] = None    
 
 class JobApplicationResponse(BaseModel):
     id: int

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
+from fastapi import Form, Depends, FastAPI, File, HTTPException, UploadFile, status
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -295,7 +295,6 @@ def get_jobs(
 async def apply_for_job(
     application: schema.JobApplicationCreate = Depends(),
     resume: UploadFile = File(...),
-    current_user: models.User = Depends(security.candidate_required),
     db: Session = Depends(database.get_db),
 ):
     # Check if job exists
@@ -305,12 +304,14 @@ async def apply_for_job(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
-    # Save resume file and create application
+    # Save the resume file
     resume_path = save_upload_file(resume, application.email)
 
+    # Create new application
     new_application = models.JobApplication(
         **application.model_dump(), resume_path=resume_path
     )
+
     db.add(new_application)
     db.commit()
     db.refresh(new_application)
@@ -321,6 +322,7 @@ async def apply_for_job(
         resume_path=resume_path,
         message="Application submitted successfully"
     )
+
 
 # In-memory storage for interview sessions (use database in production)
 interview_sessions: Dict[str, InterviewSession] = {}

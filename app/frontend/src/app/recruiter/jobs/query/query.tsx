@@ -98,7 +98,7 @@ export const useGetJobs = () => {
                 if(error.status === 401){
                     toast.error("Your session has expired. Please log in again.");
                     localStorage.clear()
-                    // router.push('/')
+                    router.push('/')
                 }
                 
                 toast.error(error?.detail || "Failed to fetch jobs");
