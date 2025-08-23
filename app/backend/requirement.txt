@@ -1,0 +1,22 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.4.2
+python-dotenv==1.0.0
+python-multipart==0.0.6
+httpx==0.25.0
+requests==2.31.0
+
+# Anthropic Claude API
+anthropic==0.7.8
+
+# Optional: Better JSON handling
+orjson==3.9.10
+
+# Optional: For database integration
+# sqlalchemy==2.0.23
+# alembic==1.12.1
+# psycopg2-binary==2.9.7  # for PostgreSQL
+
+# Optional: For enhanced functionality
+# redis==5.0.1  # for session caching
+# pytest==7.4.3  # for testing
