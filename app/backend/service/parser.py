@@ -155,6 +155,7 @@ def read_pdf(file_path: str) -> str:
     )
 
 
+
 def read_docx(file_path: str) -> str:
     return docx2txt.process(file_path).strip()
 

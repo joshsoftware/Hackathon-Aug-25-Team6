@@ -18,6 +18,7 @@ class User(Base):
     role = Column(Enum(UserRole), nullable=False)
     question_answers = relationship("QuestionAnswer", back_populates="candidate")
     question_scores = relationship("QuestionScore", back_populates="candidate")
+    posted_jobs = relationship("Job", back_populates="recruiter")
 
 
 class Job(Base):
@@ -26,14 +27,21 @@ class Job(Base):
     job_id = Column(
         Integer, primary_key=True, index=True, nullable=False, autoincrement=True
     )
+<<<<<<< Updated upstream
+=======
+    title = Column(String, nullable=False)
+    company = Column(String, nullable=False)
+>>>>>>> Stashed changes
     location = Column(String, nullable=False)
     experience = Column(String, nullable=False)
     job_overview = Column(Text, nullable=False)
     key_responsibilities = Column(Text, nullable=False)
-    required_skills = Column(Text, nullable=False)
+    must_have_skills = Column(Text, nullable=False)
     qualifications = Column(Text, nullable=False)
     good_to_have_skills = Column(Text, nullable=True)  # optional field
+    recruiter_id = Column(Integer, ForeignKey("user.id"), nullable=False) 
 
+    recruiter = relationship("User", back_populates="posted_jobs") 
     applications = relationship("JobApplication", back_populates="job")
 
 
