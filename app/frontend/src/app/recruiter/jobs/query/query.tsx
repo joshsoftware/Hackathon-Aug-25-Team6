@@ -60,6 +60,7 @@ export const useCreateJob = () => {
 
         onError: (response: any) => {
             const errorMessage = (response.detail as { error_msg: string })?.error_msg || 'Sign up failed';
+
             toast.error(errorMessage);
         }
     });
@@ -94,7 +95,7 @@ export const useGetJobs = () => {
             } catch (error: any) {
 
                 if(error.status === 401){
-                    toast.error("Please Log in Again");
+                    toast.error("Your session has expired. Please log in again.");
                     localStorage.clear()
                     router.push('/')
                 }
