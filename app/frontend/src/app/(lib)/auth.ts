@@ -3,7 +3,7 @@ export interface User {
   id: string
   email: string
   name: string
-  role: "candidate" | "recruiter"
+  role: "candidate" | "hr"
   avatar?: string
 }
 
@@ -19,7 +19,7 @@ export const mockUsers: Record<string, User> = {
     id: "1",
     email: "recruiter@company.com",
     name: "Sarah Johnson",
-    role: "recruiter",
+    role: "hr",
     avatar: "/professional-woman-diverse.png",
   },
   "candidate@email.com": {
@@ -31,16 +31,19 @@ export const mockUsers: Record<string, User> = {
   },
 }
 
-export const getCurrentUser = (): User | null => {
-  // Mock implementation - in real app, this would check JWT/session
+export const getCurrentUser = (): { user: User | null; authToken: string | null } => {
   if (typeof window !== "undefined") {
-    const userType = window.location.pathname.includes("recruiter") ? "recruiter" : "candidate"
-    return userType === "recruiter" ? mockUsers["recruiter@company.com"] : mockUsers["candidate@email.com"]
+    const userStr = localStorage.getItem("userDetails");
+    const token = localStorage.getItem("token");
+    let user: User | null = null;
+    if (userStr) {
+      try {
+        user = JSON.parse(userStr);
+      } catch {
+        user = null;
+      }
+    }
+    return { user, authToken: token };
   }
-  return null
-}
-
-export const logout = () => {
-  // Mock logout - redirect to login
-  window.location.href = "/"
-}
+  return { user: null, authToken: null };
+};
