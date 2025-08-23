@@ -1,30 +1,47 @@
 import { useMutation } from "@tanstack/react-query";
-import axios, { AxiosError } from "axios";
-import { useToast } from "@/app/(components)/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/app/(auth)/axiosInstance";
+import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 
 const JOB_API = {
-    CREATEJOB: "/createjob",
+    CREATEJOB: "/jobs",
     GETJOBSBYID: "/getsinglejob",
-    GETLISTOFJOBS: "/getjobs",
+    GETLISTOFJOBS: "/jobs",
     DELETEJOB: "/deletejob",
 };
 
-interface ICreateJobPayload {
+export interface ICreateJobPayload {
     location: string;
     title: string;
     company: string;
     experience: string;
     job_overview: string;
     key_responsibilities: string;
-    primary_skills: string;
-    qualifications: string;
+    job_type: string;
     good_to_have_skills: string;
+    must_have_skills: string;
 }
 
+export interface IJob {
+    job_id: string;
+    title: string;
+    company: string;
+    location: string;
+    experience: string;
+    job_overview: string;
+    key_responsibilities: string;
+    must_have_skills: string[];
+    good_to_have_skills: string[];
+    recruiter_id: string;
+    recruiter_name: string;
+    job_type: string;
+    applications_count: number;
+    posted_date: string;
+}
+
+
 export const useCreateJob = () => {
-    const toast = useToast();
     const router = useRouter();
 
     const { mutate, isError, isPending, isSuccess } = useMutation({
@@ -36,21 +53,14 @@ export const useCreateJob = () => {
         },
 
         onSuccess: (response) => {
-            toast.toast({
-                title: "Job created!",
-                description: response.message || "Job created successfully",
-                variant: "default",
-            });
+            toast.success(response.message || "Job created successfully",);
 
             router.push('/recruiter/jobs')
         },
-        onError: (error: AxiosError) => {
-            const errorMessage = (error.response?.data as { error_msg: string })?.error_msg || 'Sign up failed';
-            toast.toast({
-                title: "Error!",
-                description: errorMessage,
-                variant: "destructive",
-            });
+
+        onError: (response: any) => {
+            const errorMessage = (response.detail as { error_msg: string })?.error_msg || 'Sign up failed';
+            toast.error(errorMessage);
         }
     });
 
@@ -62,83 +72,36 @@ export const useCreateJob = () => {
     };
 };
 
-//     const toast = useToast();
-//     const router = useRouter();
 
-//     const { mutate, isError, isPending, isSuccess } = useMutation({
-//         mutationKey: ['login'],
-//         mutationFn: (payload: ILoginPayload) => 
-//             axios.post<IAuthResponse>(AUTH_API.LOGIN, payload, { withCredentials: true }),
-//         onSuccess: (response) => {
-//             const { access_token, user } = response.data;
-            
-//             // Store token
-//             localStorage.setItem('token', access_token);
-            
-//             toast.toast({
-//                 title: "Welcome back!",
-//                 description: "You've successfully logged in.",
-//                 variant: "default",
-//             });
+export const useGetJobs = () => {
+    const router = useRouter();
+    
+    return useQuery<IJob[], Error>({
+        queryKey: ['getjobs'],
+        queryFn: async () => {
+            try {
+                const response = await axiosInstance.get(JOB_API.GETLISTOFJOBS);
 
-//             // Redirect based on role
-//             if (user.role === 'recruiter') {
-//                 router.push('/recruiter/dashboard');
-//             } else {
-//                 router.push('/candidate/dashboard');
-//             }
-//         },
-//         onError: (error: AxiosError) => {
-//             const errorMessage = (error.response?.data as { error_msg: string })?.error_msg || 'Login failed';
-//             toast.toast({
-//                 title: "Error!",
-//                 description: errorMessage,
-//                 variant: "destructive",
-//             });
-//         }
-//     });
+                return response.data.map((job: any) => ({
+                    ...job,
+                    must_have_skills: job.must_have_skills
+                        ? job.must_have_skills.split(",").map((s: string) => s.trim()).filter(Boolean)
+                        : [],
+                    good_to_have_skills: job.good_to_have_skills
+                        ? job.good_to_have_skills.split(",").map((s: string) => s.trim()).filter(Boolean)
+                        : [],
+                }));
+            } catch (error: any) {
 
-//     return {
-//         loginMutation: mutate,
-//         isLoginError: isError,
-//         isLoginPending: isPending,
-//         isLoginSuccess: isSuccess
-//     };
-// };
-
-// export const useLogout = () => {
-//     const toast = useToast();
-//     const router = useRouter();
-
-//     const { mutate, isError, isPending, isSuccess } = useMutation({
-//         mutationKey: ['logout'],
-//         mutationFn: () => axios.post(AUTH_API.LOGOUT, {}, { withCredentials: true }),
-//         onSuccess: () => {
-//             localStorage.removeItem('token');
-            
-//             toast.toast({
-//                 title: "Logged out",
-//                 description: "You've been successfully logged out.",
-//                 variant: "default",
-//             });
-
-//             // Redirect to login
-//             router.push('/');
-//         },
-//         onError: (error: AxiosError) => {
-//             const errorMessage = (error.response?.data as { error_msg: string })?.error_msg || 'Logout failed';
-//             toast.toast({
-//                 title: "Error!",
-//                 description: errorMessage,
-//                 variant: "destructive",
-//             });
-//         }
-//     });
-
-//     return {
-//         logoutMutation: mutate,
-//         isLogoutError: isError,
-//         isLogoutPending: isPending,
-//         isLogoutSuccess: isSuccess
-//     };
-// };
+                if(error.status === 401){
+                    toast.error("Please Log in Again");
+                    localStorage.clear()
+                    router.push('/')
+                }
+                
+                toast.error(error?.detail || "Failed to fetch jobs");
+                throw error;
+            }
+        }
+    });
+};

@@ -41,19 +41,24 @@ export default function NewJobPage() {
 
   const [mustHaveSkills, setMustHaveSkills] = useState<string[]>([]);
   const [goodToHaveSkills, setGoodToHaveSkills] = useState<string[]>([]);
-  const [currentSkill, setCurrentSkill] = useState("");
+  
+  // Create separate state variables for each input
+  const [currentMustHaveSkill, setCurrentMustHaveSkill] = useState("");
+  const [currentGoodToHaveSkill, setCurrentGoodToHaveSkill] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { createJobMutation, isJobSuccess, isJobError, isJobPending } = useCreateJob()
 
+  
   const addSkill = (skillType: "must" | "good") => {
-    if (!currentSkill.trim()) return;
-
     if (skillType === "must") {
-      setMustHaveSkills([...mustHaveSkills, currentSkill.trim()]);
+      if (!currentMustHaveSkill.trim()) return;
+      setMustHaveSkills([...mustHaveSkills, currentMustHaveSkill.trim()]);
+      setCurrentMustHaveSkill("");
     } else {
-      setGoodToHaveSkills([...goodToHaveSkills, currentSkill.trim()]);
+      if (!currentGoodToHaveSkill.trim()) return;
+      setGoodToHaveSkills([...goodToHaveSkills, currentGoodToHaveSkill.trim()]);
+      setCurrentGoodToHaveSkill("");
     }
-    setCurrentSkill("");
   };
 
   const removeSkill = (skillType: "must" | "good", index: number) => {
@@ -67,25 +72,32 @@ export default function NewJobPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    debugger
 
-    const {title,company,location  } = formData;
+    const {title, company, location, experience, description, type: jobType, requirements: keyResponsibilites } = formData;
 
+    console.log("kay yeyt??", {
+      title,
+      company,
+      location,
+      experience,
+      job_overview: description,
+      job_type: jobType,
+      key_responsibilities: keyResponsibilites,
+      must_have_skills: mustHaveSkills.join(", "),
+      good_to_have_skills: goodToHaveSkills.join(", "),
+    })
+    
     createJobMutation({
-      title: formData.title,
-      company: formData.company,
-      location: formData.location,
-      experience: formData.experience,
-      job_overview: formData.description,
-      key_responsibilities: mustHaveSkills.toLocaleString(),
-      primary_skills: mustHaveSkills.join(", "),
-      qualifications: formData.requirements,
+      title,
+      company,
+      location,
+      experience,
+      job_overview: description,
+      job_type: jobType,
+      key_responsibilities: keyResponsibilites,
+      must_have_skills: mustHaveSkills.join(", "),
       good_to_have_skills: goodToHaveSkills.join(", "),
     });
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Redirect to jobs list
-    // window.location.href = "/recruiter/jobs";
   };
 
   return (
@@ -198,7 +210,7 @@ export default function NewJobPage() {
                 </div> */}
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="applicationDeadline">
                   Application Deadline *
                 </Label>
@@ -214,7 +226,7 @@ export default function NewJobPage() {
                   }
                   required
                 />
-              </div>
+              </div> */}
             </CardContent>
           </Card>
 
@@ -271,8 +283,8 @@ export default function NewJobPage() {
                 <div className="flex gap-2">
                   <Input
                     placeholder="Enter a skill and press Enter"
-                    value={currentSkill}
-                    onChange={(e) => setCurrentSkill(e.target.value)}
+                    value={currentMustHaveSkill}
+                    onChange={(e) => setCurrentMustHaveSkill(e.target.value)}
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -284,6 +296,8 @@ export default function NewJobPage() {
                     Add
                   </Button>
                 </div>
+
+
                 <div className="flex flex-wrap gap-2">
                   {mustHaveSkills.map((skill, index) => (
                     <Badge
@@ -301,14 +315,15 @@ export default function NewJobPage() {
                 </div>
               </div>
 
+
               {/* Good-to-have Skills */}
               <div className="space-y-3">
                 <Label>Good-to-have Skills</Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Enter a skill and press Enter"
-                    value={currentSkill}
-                    onChange={(e) => setCurrentSkill(e.target.value)}
+                    value={currentGoodToHaveSkill}
+                    onChange={(e) => setCurrentGoodToHaveSkill(e.target.value)}
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -320,6 +335,7 @@ export default function NewJobPage() {
                     Add
                   </Button>
                 </div>
+
                 <div className="flex flex-wrap gap-2">
                   {goodToHaveSkills.map((skill, index) => (
                     <Badge
