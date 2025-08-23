@@ -1,8 +1,10 @@
 from enum import Enum
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String,
+                        Text)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from app.backend.database import Base
 from app.backend.schema import Gender, UserRole
@@ -27,7 +29,10 @@ class Job(Base):
     job_id = Column(
         Integer, primary_key=True, index=True, nullable=False, autoincrement=True
     )
+<<<<<<< HEAD
 
+=======
+>>>>>>> f44de8b9738798965b8b9ff63c0bf0efd0f08a91
     title = Column(String, nullable=False)
     company = Column(String, nullable=False)
     location = Column(String, nullable=False)
@@ -35,11 +40,12 @@ class Job(Base):
     job_overview = Column(Text, nullable=False)
     key_responsibilities = Column(Text, nullable=False)
     must_have_skills = Column(Text, nullable=False)
-    qualifications = Column(Text, nullable=False)
     good_to_have_skills = Column(Text, nullable=True)  # optional field
-    recruiter_id = Column(Integer, ForeignKey("user.id"), nullable=False) 
+    recruiter_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    job_type = Column(String, nullable=False)
+    posted_date = Column(DateTime, nullable=False, server_default=func.now())
 
-    recruiter = relationship("User", back_populates="posted_jobs") 
+    recruiter = relationship("User", back_populates="posted_jobs")
     applications = relationship("JobApplication", back_populates="job")
 
 

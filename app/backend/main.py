@@ -2,10 +2,13 @@ from ast import Dict
 import os
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
+
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 # Import the new Anthropic integration
@@ -49,6 +52,7 @@ app.include_router(question_router)
 # app.include_router(question_score_router)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 
 # Initialize Anthropic Claude
 def initialize_anthropic():
@@ -238,8 +242,49 @@ def get_jobs(
     current_user: models.User = Depends(security.get_current_user),
     db: Session = Depends(database.get_db),
 ):
-    jobs = db.query(models.Job).all()
-    return jobs
+    base_query = (
+        db.query(
+            models.Job,
+            models.User.name.label("recruiter_name"),
+            func.count(models.JobApplication.id).label(
+                "applications_count"
+            ),  # Changed from db.func to func
+        )
+        .join(models.User, models.Job.recruiter_id == models.User.id)
+        .outerjoin(
+            models.JobApplication, models.Job.job_id == models.JobApplication.job_id
+        )
+        .group_by(models.Job.job_id, models.User.name)
+    )
+
+    if current_user.role == schema.UserRole.HR:
+        # HR sees only their posted jobs
+        jobs = base_query.filter(models.Job.recruiter_id == current_user.id).all()
+    else:
+        # Candidates see all jobs
+        jobs = base_query.all()
+    # Convert the result to a list of dictionaries
+    job_list = []
+    for job, recruiter_name, applications_count in jobs:
+        job_dict = {
+            "job_id": job.job_id,
+            "title": job.title,
+            "company": job.company,
+            "location": job.location,
+            "experience": job.experience,
+            "job_overview": job.job_overview,
+            "key_responsibilities": job.key_responsibilities,
+            "must_have_skills": job.must_have_skills,
+            "good_to_have_skills": job.good_to_have_skills,
+            "recruiter_id": job.recruiter_id,
+            "recruiter_name": recruiter_name,
+            "job_type": job.job_type,
+            "applications_count": applications_count,
+            "posted_date": job.posted_date,
+        }
+        job_list.append(job_dict)
+
+    return job_list
 
 @app.post(
     "/apply",
