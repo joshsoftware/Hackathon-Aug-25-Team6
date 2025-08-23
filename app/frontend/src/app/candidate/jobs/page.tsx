@@ -46,12 +46,10 @@ export default function CandidateJobsPage() {
         );
 
       // Location filter
-      const matchesLocation =
-        locationFilters.length === 0 || locationFilters.includes(job.location);
+      const matchesLocation = locationFilters.length === 0 || locationFilters.includes(job.location);
 
       // Type filter
-      const matchesType =
-        typeFilters.length === 0 || typeFilters.includes(job.type);
+      const matchesType = typeFilters.length === 0 || typeFilters.includes(job.type);
 
       // Salary filter
       const matchesSalary =

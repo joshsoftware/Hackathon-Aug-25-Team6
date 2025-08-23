@@ -6,3 +6,20 @@ export const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    
+    // If token exists, add it to headers
+    if (token) {
+      config.headers['Authorization'] = token;
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
