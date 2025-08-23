@@ -17,3 +17,5 @@ docx2txt
 PyMuPDF
 python-dotenv
 requests==2.32.5
+
+pypdf

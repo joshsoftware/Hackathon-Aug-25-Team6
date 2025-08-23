@@ -1,5 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
+import json
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
@@ -8,6 +9,8 @@ from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
 from app.backend.api.questions_score import question_score_router
 from app.backend.utils import create_tables, save_upload_file
+from app.backend.service.parser import parse_file_with_ai
+from app.backend.prompts.prompt import get_prompt
 from fastapi.middleware.cors import CORSMiddleware
 
 # create tables
@@ -119,11 +122,19 @@ async def apply_for_job(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
-    # Save resume file and create application
+    # Save resume file
     resume_path = save_upload_file(resume, application.email)
 
+    # Parse resume with AI
+    try:
+        prompt = get_prompt("parse_resume")
+        ai_result = parse_file_with_ai(resume_path, prompt) if prompt else {"error": "Missing parse_resume prompt"}
+    except Exception as e:
+        ai_result = {"error": f"Failed to parse resume: {str(e)}"}
+
+    # Create application with parsed resume JSON stored as text
     new_application = models.JobApplication(
-        **application.model_dump(), resume_path=resume_path
+        **application.model_dump(), resume_path=resume_path, parsed_resume=ai_result
     )
     db.add(new_application)
     db.commit()
@@ -133,5 +144,6 @@ async def apply_for_job(
         **application.model_dump(),
         id=new_application.id,
         resume_path=resume_path,
+        parsed_resume=ai_result,
         message="Application submitted successfully"
     )

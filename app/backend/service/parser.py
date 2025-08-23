@@ -4,9 +4,22 @@ import re
 import requests
 from typing import Dict, Union
 from langchain_core.prompts import ChatPromptTemplate
-import fitz  # PyMuPDF for PDF
+# Optional PDF backends: PyMuPDF ('fitz') and fallback 'pypdf'
+try:
+    import fitz  # type: ignore  # PyMuPDF for PDF
+    _HAVE_PYMUPDF = True
+except Exception:
+    fitz = None  # type: ignore
+    _HAVE_PYMUPDF = False
+
+try:
+    from pypdf import PdfReader  # fallback pure-Python backend
+    _HAVE_PYPDF = True
+except Exception:
+    PdfReader = None  # type: ignore
+    _HAVE_PYPDF = False
+
 import docx2txt  # For DOCX
-from app.backend.prompts.prompt import get_prompt
 from dotenv import load_dotenv
 
 
@@ -81,11 +94,64 @@ def parse_with_ai(text: str, prompt: Union[str, ChatPromptTemplate]) -> Dict:
 
 
 def read_pdf(file_path: str) -> str:
-    text = ""
-    with fitz.open(file_path) as pdf:
-        for page in pdf:
-            text += page.get_text("text") + "\n"
-    return text.strip()
+    """Read text from a PDF using the best available backend.
+
+    Order of preference:
+    1) PyMuPDF (fitz) — fast and robust
+    2) pypdf — pure-Python fallback
+
+    Raises:
+        ImportError: if no PDF backend is available
+        ValueError: if extraction yields empty text (likely a scanned PDF) or both backends failed
+    """
+    errors: list[str] = []
+
+    # Try PyMuPDF first if available
+    if _HAVE_PYMUPDF:
+        try:
+            text = ""
+            with fitz.open(file_path) as pdf:
+                for page in pdf:
+                    # 'text' mode gives layout-aware text; fallback to default if needed
+                    page_text = page.get_text("text") or page.get_text() or ""
+                    if page_text:
+                        text += page_text + "\n"
+            if text.strip():
+                return text.strip()
+        except Exception as e:
+            errors.append(f"PyMuPDF failed: {e}")
+
+    # Fallback to pypdf if available
+    if _HAVE_PYPDF:
+        try:
+            parts: list[str] = []
+            reader = PdfReader(file_path)  # type: ignore[name-defined]
+            for page in reader.pages:
+                try:
+                    t = page.extract_text() or ""
+                except Exception as e2:
+                    t = ""
+                    errors.append(f"pypdf page extract error: {e2}")
+                if t:
+                    parts.append(t)
+            combined = "\n".join(parts).strip()
+            if combined:
+                return combined
+        except Exception as e:
+            errors.append(f"pypdf failed: {e}")
+
+    # No backends? Instruct how to install
+    if not _HAVE_PYMUPDF and not _HAVE_PYPDF:
+        raise ImportError(
+            "No PDF backend installed. Install one of: 'PyMuPDF' (pip install PyMuPDF) or 'pypdf' (pip install pypdf)."
+        )
+
+    # Backends present but no text extracted: likely scanned PDF
+    error_note = "; ".join(errors) if errors else ""
+    raise ValueError(
+        "Unable to extract text from PDF. The file may be scanned or image-based. "
+        "Consider OCR (e.g., pytesseract) if needed. " + error_note
+    )
 
 def read_docx(file_path: str) -> str:
     return docx2txt.process(file_path).strip()
