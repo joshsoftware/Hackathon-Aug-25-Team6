@@ -24,6 +24,7 @@ import {
 } from "@/app/(components)/ui/select";
 import { Badge } from "@/app/(components)/ui/badge";
 import { X } from "lucide-react";
+import { useCreateJob } from "../query/query";
 
 export default function NewJobPage() {
   const [formData, setFormData] = useState({
@@ -31,7 +32,7 @@ export default function NewJobPage() {
     company: "",
     location: "",
     type: "",
-    salaryMin: "",
+    experience: "",
     salaryMax: "",
     description: "",
     requirements: "",
@@ -42,6 +43,7 @@ export default function NewJobPage() {
   const [goodToHaveSkills, setGoodToHaveSkills] = useState<string[]>([]);
   const [currentSkill, setCurrentSkill] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { createJobMutation, isJobSuccess, isJobError, isJobPending } = useCreateJob()
 
   const addSkill = (skillType: "must" | "good") => {
     if (!currentSkill.trim()) return;
@@ -65,12 +67,25 @@ export default function NewJobPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    debugger
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const {title,company,location  } = formData;
 
+    createJobMutation({
+      title: formData.title,
+      company: formData.company,
+      location: formData.location,
+      experience: formData.experience,
+      job_overview: formData.description,
+      key_responsibilities: mustHaveSkills.toLocaleString(),
+      primary_skills: mustHaveSkills.join(", "),
+      qualifications: formData.requirements,
+      good_to_have_skills: goodToHaveSkills.join(", "),
+    });
+    // await new Promise((resolve) => setTimeout(resolve, 2000));
+    
     // Redirect to jobs list
-    window.location.href = "/recruiter/jobs";
+    // window.location.href = "/recruiter/jobs";
   };
 
   return (
@@ -158,18 +173,18 @@ export default function NewJobPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="salaryMin">Minimum Salary (USD)</Label>
+                  <Label htmlFor="salaryMin">Experience</Label>
                   <Input
                     id="salaryMin"
                     type="number"
-                    placeholder="e.g., 80000"
-                    value={formData.salaryMin}
+                    placeholder="e.g., 8 years"
+                    value={formData.experience}
                     onChange={(e) =>
-                      setFormData({ ...formData, salaryMin: e.target.value })
+                      setFormData({ ...formData, experience: e.target.value })
                     }
                   />
                 </div>
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="salaryMax">Maximum Salary (USD)</Label>
                   <Input
                     id="salaryMax"
@@ -180,7 +195,7 @@ export default function NewJobPage() {
                       setFormData({ ...formData, salaryMax: e.target.value })
                     }
                   />
-                </div>
+                </div> */}
               </div>
 
               <div className="space-y-2">
