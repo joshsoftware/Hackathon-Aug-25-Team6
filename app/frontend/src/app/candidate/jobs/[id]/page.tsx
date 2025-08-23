@@ -1,3 +1,4 @@
+"use client"
 import { DashboardLayout } from "@/app/(components)/(layout)/dashboard-layout";
 import {
   Card,
@@ -18,19 +19,18 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
+import { useGetJobById, IJob } from "@/app/recruiter/jobs/query/query";
 
-interface JobDetailPageProps {
-  params: {
-    id: string;
-  };
-}
 
-export default function JobDetailPage({ params }: JobDetailPageProps) {
-  const job = mockJobs.find((j) => j.id === params.id);
-
-  if (!job) {
-    notFound();
+export default function JobDetailPage() {
+  const params = useParams()
+  console.log(params.id?.toString(), typeof(params.id?.toString()))
+  
+  const { data: job, isLoading, isError } = useGetJobById(params.id!.toString());
+  
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -48,12 +48,12 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                 {job.company}
               </div>
             </div>
-            <Badge
+            {/* <Badge
               variant={job.status === "active" ? "default" : "secondary"}
               className="text-sm"
             >
               {job.status}
-            </Badge>
+            </Badge> */}
           </div>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -61,25 +61,25 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               <MapPin className="h-4 w-4" />
               {job.location}
             </div>
-            {job.salary && (
+            {/* {job.salary && (
               <div className="flex items-center gap-1">
                 <DollarSign className="h-4 w-4" />$
                 {job.salary.min.toLocaleString()} - $
                 {job.salary.max.toLocaleString()} {job.salary.currency}
               </div>
-            )}
+            )} */}
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
-              {job.type}
+              {job.job_type}
             </div>
-            <div className="flex items-center gap-1">
+            {/* <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               {job.applicantCount} applicants
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               Apply by {new Date(job.applicationDeadline).toLocaleDateString()}
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -95,7 +95,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   Upload your resume and complete our pre-screening questions
                 </p>
               </div>
-              <Link href={`/candidate/jobs/${job.id}/apply`}>
+              <Link href={`/candidate/jobs/${job.job_id}/apply`}>
                 <Button size="lg" className="px-8">
                   Apply Now
                 </Button>
@@ -114,7 +114,10 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
-                  {job.description}
+                  {job.job_overview}
+                </p>
+                <p className="text-muted-foreground leading-relaxed">
+                  {job.key_responsibilities}
                 </p>
               </CardContent>
             </Card>
@@ -125,14 +128,14 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                 <CardTitle>Requirements</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                {/* <div className="space-y-4">
                   {job.requirements.map((requirement, index) => (
                     <div key={index} className="flex items-start gap-3">
                       <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
                       <p className="text-muted-foreground">{requirement}</p>
                     </div>
                   ))}
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 
@@ -147,7 +150,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                     Must-have Skills
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {job.mustHaveSkills.map((skill) => (
+                    {job.must_have_skills.map((skill) => (
                       <Badge key={skill} variant="default">
                         {skill}
                       </Badge>
@@ -155,7 +158,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   </div>
                 </div>
 
-                {job.goodToHaveSkills.length > 0 && (
+                {job.good_to_have_skills.length > 0 && (
                   <>
                     <Separator />
                     <div className="space-y-3">
@@ -163,7 +166,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                         Good-to-have Skills
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {job.goodToHaveSkills.map((skill) => (
+                        {job.good_to_have_skills.map((skill) => (
                           <Badge key={skill} variant="outline">
                             {skill}
                           </Badge>
@@ -207,7 +210,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                     Posted Date
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {new Date(job.postedDate).toLocaleDateString()}
+                    {new Date(job.posted_date).toLocaleDateString()}
                   </div>
                 </div>
                 <Separator />
@@ -215,16 +218,16 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   <div className="text-sm font-medium text-foreground">
                     Application Deadline
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  {/* <div className="text-sm text-muted-foreground">
                     {new Date(job.applicationDeadline).toLocaleDateString()}
-                  </div>
+                  </div> */}
                 </div>
                 <Separator />
                 <div className="space-y-2">
                   <div className="text-sm font-medium text-foreground">
                     Job Type
                   </div>
-                  <Badge variant="secondary">{job.type}</Badge>
+                  <Badge variant="secondary">{job.job_type}</Badge>
                 </div>
                 <Separator />
                 <div className="space-y-2">
@@ -232,20 +235,20 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                     Applicants
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {job.applicantCount} candidates applied
+                    {job.applications_count} candidates applied
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Similar Jobs */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Similar Jobs</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {mockJobs
-                  .filter((j) => j.id !== job.id && j.status === "active")
+                  .filter((j) => j.id !== job.job_id && j.status === "active")
                   .slice(0, 2)
                   .map((similarJob) => (
                     <Link
@@ -269,7 +272,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                     </Link>
                   ))}
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

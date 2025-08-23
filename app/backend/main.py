@@ -510,6 +510,18 @@ async def health_check():
         "version": "1.0.0"
     }
 
+@app.get("/jobs/{job_id}")
+def get_jobs(
+    job_id: int,
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+    job =  db.query(
+            models.Job,
+        ).filter(models.Job.job_id == job_id).first()
+    
+    return job
+        
 if __name__ == "__main__":
     import uvicorn
     print("�� Starting Interview Question Generator with Claude")
