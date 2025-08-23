@@ -21,16 +21,14 @@ import { useRouter } from "next/navigation";
 
 export function Header() {
   const { user, authToken } = getCurrentUser();
-  const router = useRouter()
-  // const { logoutMutation } = useLogout(); // Use logout mutation
+  const router = useRouter();
 
-   const logoutApplication = () => {
-    router.push('/')
+  const logoutApplication = () => {
+    router.push("/");
     localStorage.clear();
     toast.success("Logged out successfully");
-    
-   }
-  
+  };
+
   // If no user or no token, don't render the header
   if (!user || !authToken) return null;
 
@@ -38,13 +36,9 @@ export function Header() {
     <header className="border-b border-border bg-card">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-foreground">
-            TalentScreen
-          </h1>
+          <h1 className="text-xl font-semibold text-foreground">RecruitIQ</h1>
           <div className="text-sm text-muted-foreground">
-            {user.role === "hr"
-              ? "Recruiter Portal"
-              : "Candidate Portal"}
+            {user.role === "hr" ? "Recruiter Portal" : "Candidate Portal"}
           </div>
         </div>
 
@@ -74,7 +68,7 @@ export function Header() {
                 </p>
               </div>
             </DropdownMenuLabel>
-            
+
             <DropdownMenuItem onClick={() => logoutApplication()}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>

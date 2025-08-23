@@ -1,60 +1,83 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Users, Building2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/(components)/ui/card"
-import { Button } from "@/app/(components)/ui/button"
-import { Input } from "@/app/(components)/ui/input"
-import { Label } from "@/app/(components)/ui/label"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/app/(components)/ui/tabs"
-import Link from "next/link"
-import { useSignUp } from "./query/query"
-
+import { useState } from "react";
+import { Users, Building2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/app/(components)/ui/card";
+import { Button } from "@/app/(components)/ui/button";
+import { Input } from "@/app/(components)/ui/input";
+import { Label } from "@/app/(components)/ui/label";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/app/(components)/ui/tabs";
+import Link from "next/link";
+import { useSignUp } from "./query/query";
 
 export default function SignupPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
-  const [userType, setUserType] = useState<"candidate" | "hr">("candidate")
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [userType, setUserType] = useState<"candidate" | "hr">("candidate");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { signUpMutation, isSignUpPending, isSignUpError } = useSignUp()
-  
-  
+  const { signUpMutation, isSignUpPending, isSignUpError } = useSignUp();
+
   const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     signUpMutation({
       email,
       password,
       name,
-      role: userType
-    })
-    
+      role: userType,
+    });
+
     // Mock authentication - redirect based on user type
-    console.log(`Signing up as ${userType} with email: ${email}, name: ${name}, password: ${password} - this is where you would handle the actual signup logic.`);
-  }
+    console.log(
+      `Signing up as ${userType} with email: ${email}, name: ${name}, password: ${password} - this is where you would handle the actual signup logic.`
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">TalentScreen</h1>
-          <p className="text-muted-foreground">Professional Candidate Pre-screening System</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">RecruitIQ</h1>
+          <p className="text-muted-foreground">
+            Professional Candidate Pre-screening System
+          </p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Sign Up</CardTitle>
-            <CardDescription>Create account to continue with the screening process</CardDescription>
+            <CardDescription>
+              Create account to continue with the screening process
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={userType} onValueChange={(value: any) => setUserType(value as "candidate" | "hr")}>
+            <Tabs
+              value={userType}
+              onValueChange={(value: any) =>
+                setUserType(value as "candidate" | "hr")
+              }
+            >
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="candidate" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="candidate"
+                  className="flex items-center gap-2"
+                >
                   <Users className="h-4 w-4" />
                   Candidate
                 </TabsTrigger>
@@ -101,26 +124,45 @@ export default function SignupPage() {
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                <Button
+                  type="submit"
+                  className="w-full"
                   disabled={isSignUpPending}
                 >
-                  {isSignUpPending 
-                    ? "Creating account..." 
-                    : `Sign up as ${userType === "candidate" ? "Candidate" : "Recruiter"}`}
+                  {isSignUpPending
+                    ? "Creating account..."
+                    : `Sign up as ${
+                        userType === "candidate" ? "Candidate" : "Recruiter"
+                      }`}
                 </Button>
               </form>
 
-               <TabsContent value="candidate" className="mt-6">
+              <TabsContent value="candidate" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>Already Have Account? <Link href="/" className="text-blue-400 hover:bg-blue-700 hover:text-white"> Sign In.</Link></p>
+                  <p>
+                    Already Have Account?{" "}
+                    <Link
+                      href="/"
+                      className="text-blue-400 hover:bg-blue-700 hover:text-white"
+                    >
+                      {" "}
+                      Sign In.
+                    </Link>
+                  </p>
                 </div>
               </TabsContent>
 
               <TabsContent value="hr" className="mt-6">
                 <div className="text-sm text-muted-foreground text-center">
-                  <p>Already Have Account ?  <Link href="/" className="text-blue-400 hover:bg-blue-700 hover:text-white">Sign In.</Link></p>
+                  <p>
+                    Already Have Account ?{" "}
+                    <Link
+                      href="/"
+                      className="text-blue-400 hover:bg-blue-700 hover:text-white"
+                    >
+                      Sign In.
+                    </Link>
+                  </p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -132,5 +174,5 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
