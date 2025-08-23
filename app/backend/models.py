@@ -1,8 +1,8 @@
 from enum import Enum
 
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
 
 from app.backend.database import Base
 from app.backend.schema import Gender, UserRole

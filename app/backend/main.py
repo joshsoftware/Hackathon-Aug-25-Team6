@@ -1,16 +1,17 @@
-from datetime import timedelta
 import json
+from datetime import timedelta
 
+from fastapi import (BackgroundTasks, Depends, FastAPI, File, HTTPException,
+                     UploadFile, status)
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
 from app.backend.api.score import score_router
-from app.backend.utils import create_tables, save_upload_file
-from app.backend.service.parser import parse_file_with_ai
 from app.backend.prompts.prompt import get_prompt
+from app.backend.service.parser import parse_file_with_ai
+from app.backend.utils import create_tables, save_upload_file
 
 # create tables
 create_tables()
@@ -136,16 +137,17 @@ async def apply_for_job(
     db.refresh(new_application)
 
     # Schedule background task to parse resume
-    background_tasks.add_task(process_resume_in_background, new_application.id, resume_path)
+    background_tasks.add_task(
+        process_resume_in_background, new_application.id, resume_path
+    )
 
     return schema.JobApplicationResponse(
         **application.model_dump(),
         id=new_application.id,
         resume_path=resume_path,
         parsed_resume=None,
-        message="Application submitted successfully. Resume parsing in background"
+        message="Application submitted successfully. Resume parsing in background",
     )
-
 
 
 def process_resume_in_background(application_id: int, resume_path: str) -> None:

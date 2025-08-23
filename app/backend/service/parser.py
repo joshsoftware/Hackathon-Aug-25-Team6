@@ -2,10 +2,13 @@ import json
 import os
 import re
 from typing import Dict, Union
+
 from langchain_core.prompts import ChatPromptTemplate
+
 # Optional PDF backends: PyMuPDF ('fitz') and fallback 'pypdf'
 try:
     import fitz  # type: ignore  # PyMuPDF for PDF
+
     _HAVE_PYMUPDF = True
 except Exception:
     fitz = None  # type: ignore
@@ -13,13 +16,11 @@ except Exception:
 
 try:
     from pypdf import PdfReader  # fallback pure-Python backend
+
     _HAVE_PYPDF = True
 except Exception:
     PdfReader = None  # type: ignore
     _HAVE_PYPDF = False
-
-import docx2txt  # For DOCX
-from dotenv import load_dotenv
 
 import docx2txt  # For DOCX
 import fitz  # PyMuPDF for PDF
