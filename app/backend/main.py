@@ -1,14 +1,13 @@
-from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from app.backend import database, models, schema, security
 from app.backend.api.questions import question_router
-from app.backend.api.questions_score import question_score_router
+from app.backend.api.score import score_router
 from app.backend.utils import create_tables, save_upload_file
-from fastapi.middleware.cors import CORSMiddleware
 
 # create tables
 create_tables()
@@ -24,7 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(question_router)
-app.include_router(question_score_router)
+app.include_router(score_router)
+
 
 @app.post("/login", response_model=schema.TokenResponse)
 async def login(
@@ -91,6 +91,7 @@ def create_job(
     db.refresh(new_job)
 
     return {"message": "Job created successfully"}
+
 
 @app.get("/jobs", response_model=list[schema.JobResponse])
 def get_jobs(

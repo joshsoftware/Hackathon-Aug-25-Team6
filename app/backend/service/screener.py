@@ -48,9 +48,7 @@ def screen_candidate_with_ai(jd: Dict, resume: Dict) -> Dict:
 
     payload = {
         "model": SCREEN_LLM_MODEL,
-        "messages": [
-            {"role": "user", "content": user_content}
-        ],
+        "messages": [{"role": "user", "content": user_content}],
     }
 
     headers = {

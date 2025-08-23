@@ -1,20 +1,20 @@
 import json
 import os
 import re
-import requests
 from typing import Dict, Union
-from langchain_core.prompts import ChatPromptTemplate
-import fitz  # PyMuPDF for PDF
-import docx2txt  # For DOCX
-from app.backend.prompts.prompt import get_prompt
-from dotenv import load_dotenv
 
+import docx2txt  # For DOCX
+import fitz  # PyMuPDF for PDF
+import requests
+from dotenv import load_dotenv
+from langchain_core.prompts import ChatPromptTemplate
+
+from app.backend.prompts.prompt import get_prompt
 
 load_dotenv()
 API_URL = os.getenv("API_URL")
 API_KEY = os.getenv("API_KEY")
 LLM_MODEL = os.getenv("LLM_MODEL")
-
 
 
 def parse_with_ai(text: str, prompt: Union[str, ChatPromptTemplate]) -> Dict:
@@ -38,15 +38,10 @@ def parse_with_ai(text: str, prompt: Union[str, ChatPromptTemplate]) -> Dict:
     print("⚡ Using remote AI API")
     payload = {
         "model": LLM_MODEL,
-        "messages": [
-            {"role": "user", "content": effective_prompt.format(text=text)}
-        ]
+        "messages": [{"role": "user", "content": effective_prompt.format(text=text)}],
     }
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
     response = requests.post(API_URL, headers=headers, json=payload)
 
     if response.status_code != 200:
@@ -87,12 +82,15 @@ def read_pdf(file_path: str) -> str:
             text += page.get_text("text") + "\n"
     return text.strip()
 
+
 def read_docx(file_path: str) -> str:
     return docx2txt.process(file_path).strip()
+
 
 def read_txt(file_path: str) -> str:
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         return f.read().strip()
+
 
 def get_text_from_file(path_str: str) -> str:
 
@@ -114,5 +112,3 @@ def parse_file_with_ai(path_str: str, prompt: Union[str, ChatPromptTemplate]) ->
     """
     text = get_text_from_file(path_str)
     return parse_with_ai(text, prompt)
-
-

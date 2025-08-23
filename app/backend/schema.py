@@ -163,3 +163,17 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
+
+class QuestionScoreBatchResult(BaseModel):
+    question_id: int
+    score: int
+    verdict: str
+    message: str
+
+
+class QuestionScoreBatchResponse(BaseModel):
+    results: list[QuestionScoreBatchResult]
+
+    class Config:
+        from_attributes = True
