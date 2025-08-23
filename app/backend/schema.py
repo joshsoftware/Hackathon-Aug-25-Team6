@@ -104,6 +104,7 @@ class JobApplicationResponse(BaseModel):
     current_city: str
     gender: Gender
     resume_path: str
+    parsed_resume: Optional[dict] = None
     message: str
 
     class Config:
