@@ -27,11 +27,9 @@ class Job(Base):
     job_id = Column(
         Integer, primary_key=True, index=True, nullable=False, autoincrement=True
     )
-<<<<<<< Updated upstream
-=======
+
     title = Column(String, nullable=False)
     company = Column(String, nullable=False)
->>>>>>> Stashed changes
     location = Column(String, nullable=False)
     experience = Column(String, nullable=False)
     job_overview = Column(Text, nullable=False)
