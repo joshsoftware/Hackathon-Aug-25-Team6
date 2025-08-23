@@ -30,9 +30,10 @@ app.include_router(question_router)
 app.include_router(score_router)
 
 
+
 @app.post("/login", response_model=schema.TokenResponse)
 async def login(
-    user_data: schema.UserLogin,  # Use Pydantic model directly, not Depends()
+    user_data: schema.UserLogin,
     db: Session = Depends(database.get_db),
 ):
     user = db.query(models.User).filter(models.User.email == user_data.email).first()
@@ -89,7 +90,7 @@ def create_job(
     current_user: models.User = Depends(security.hr_required),
     db: Session = Depends(database.get_db),
 ):
-    new_job = models.Job(**job.model_dump())
+    new_job = models.Job(**job.model_dump(), recruiter_id=current_user.id)
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
@@ -102,8 +103,30 @@ def get_jobs(
     current_user: models.User = Depends(security.get_current_user),
     db: Session = Depends(database.get_db),
 ):
-    jobs = db.query(models.Job).all()
+    if current_user.role == schema.UserRole.HR:
+        # HR sees only their posted jobs
+        jobs = db.query(models.Job)\
+            .filter(models.Job.recruiter_id == current_user.id)\
+            .all()
+    else:
+        # Candidates see all jobs
+        jobs = db.query(models.Job).all()
+    
     return jobs
+
+
+@app.get("/my-applications/count")
+def get_my_applications_count(
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+    applied_jobs_count = (
+        db.query(models.JobApplication)
+        .filter(models.JobApplication.email == current_user.email)
+        .count()
+    )
+
+    return {"total_applications": applied_jobs_count, "email": current_user.email}
 
 
 @app.post(
