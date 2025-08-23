@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-// import { useToast } from "@/app/(components)/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/app/(auth)/axiosInstance";
 import { toast } from "react-toastify";
@@ -41,7 +40,7 @@ interface ILoginResponse {
         id: number;
         email: string;
         name: string;
-        role: "candidate" | "recruiter";
+        role: "candidate" | "hr";
         message: string;
     };
 }
@@ -98,7 +97,7 @@ export const useLogin = () => {
             toast.success("You've successfully logged in.");
 
             // Redirect based on role
-            if (user.role === 'recruiter') {
+            if (user.role === 'hr') {
                 router.push('/recruiter/dashboard');
             } else {
                 router.push('/candidate/dashboard');

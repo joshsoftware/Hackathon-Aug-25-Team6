@@ -73,21 +73,16 @@ const candidateNavItems = [
 ];
 
 export function Sidebar() {
-  const user = getCurrentUser();
+  const { user } = getCurrentUser();
   const pathname = usePathname();
 
   if (!user) return null;
 
   const navItems =
-    user.role === "recruiter" ? recruiterNavItems : candidateNavItems;
+    user.role === "hr" ? recruiterNavItems : candidateNavItems;
 
   return (
     <div className="flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border">
-      {/* <div className="flex h-16 items-center px-6 border-b border-sidebar-border">
-        <h2 className="text-lg font-semibold text-sidebar-foreground">
-          {user.role === "recruiter" ? "Recruiter Panel" : "Candidate Panel"}
-        </h2>
-      </div> */}
       <nav className="flex-1 space-y-1 p-4">
         {navItems.map((item) => {
           const Icon = item.icon;
