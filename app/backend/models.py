@@ -2,6 +2,7 @@ from enum import Enum
 
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.backend.database import Base
 from app.backend.schema import Gender, UserRole
@@ -48,6 +49,7 @@ class JobApplication(Base):
     current_city = Column(String, nullable=False)
     resume_path = Column(String, nullable=False)  # We'll store the file path
     gender = Column(Enum(Gender), nullable=False)
+    parsed_resume = Column(JSONB, nullable=True)
 
     # Relationship to Job
     job = relationship("Job", back_populates="applications")
